@@ -1,0 +1,114 @@
+# =============================================================================
+# DEVELOPMENT ENVIRONMENT CONFIGURATION
+# =============================================================================
+
+spring:
+  # Database Configuration (Development)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kontext_dev
+    username: kontext_user
+    password: kontext_password
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+  
+  # JPA Configuration (Development)
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+  
+  # Security Configuration (Development)
+  security:
+    user:
+      name: admin
+      password: admin123
+      roles: ADMIN
+  
+  # Cache Configuration (Development)
+  cache:
+    type: simple
+  
+  # Development Tools
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+  
+  # H2 Console (Development)
+  h2:
+    console:
+      enabled: false
+  
+  # Jackson Configuration (Development)
+  jackson:
+    serialization:
+      indent-output: true
+  
+  # AI Configuration (Development)
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:your-dev-api-key-here}
+      base-url: https://api.openai.com
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.7
+          max-tokens: 2000
+
+# Server Configuration (Development)
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: true
+
+# Logging Configuration (Development)
+logging:
+  level:
+    root: INFO
+    com.moksh.kontext: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.transaction: DEBUG
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+
+# Actuator Configuration (Development)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    configprops:
+      show-values: when-authorized
+    env:
+      show-values: when-authorized
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.9,0.95,0.99
+#      slo:
+#        http.server.requests: 50ms,100ms,200ms,300ms,500ms,1s
+  tracing:
+    sampling:
+      probability: 1.0
+  prometheus:
+    metrics:
+      export:
+        enabled: true

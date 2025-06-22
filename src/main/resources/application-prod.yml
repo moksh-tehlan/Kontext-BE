@@ -1,0 +1,163 @@
+# =============================================================================
+# PRODUCTION ENVIRONMENT CONFIGURATION
+# =============================================================================
+
+spring:
+  # Database Configuration (Production)
+  # Use environment variables for sensitive data
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://prod-db:5432/kontext}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+  
+  # JPA Configuration (Production)
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        generate_statistics: false
+  
+  # Security Configuration (Production)
+  # Never use default credentials in production
+  security:
+    user:
+      name: ${ADMIN_USERNAME}
+      password: ${ADMIN_PASSWORD}
+      roles: ADMIN
+  
+  # Cache Configuration (Production)
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000,expireAfterAccess=600s
+  
+  # Jackson Configuration (Production)
+  jackson:
+    serialization:
+      indent-output: false
+      write-null-map-values: false
+  
+  # CORS Configuration (Production)
+  # Restrict CORS to specific domains
+  web:
+    cors:
+      allowed-origins: ${ALLOWED_ORIGINS:https://yourdomain.com}
+      allowed-methods: GET,POST,PUT,DELETE
+      allowed-headers: Content-Type,Authorization,X-Requested-With
+      allow-credentials: false
+      max-age: 3600
+  
+  # AI Configuration (Production)
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: https://api.openai.com
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.3
+          max-tokens: 1500
+          timeout: 30s
+      
+  # Environment Validation
+  profiles:
+    active: prod
+
+# Server Configuration (Production)
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 20000
+    keep-alive-timeout: 15000
+    max-connections: 8192
+    threads:
+      max: 200
+      min-spare: 10
+    max-swallow-size: 2MB
+    max-http-form-post-size: 2MB
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: strict
+      timeout: 30m
+
+# SSL Configuration (Production)
+# Uncomment and configure when SSL is enabled
+# server:
+#   ssl:
+#     enabled: true
+#     key-store: ${SSL_KEYSTORE_PATH}
+#     key-store-password: ${SSL_KEYSTORE_PASSWORD}
+#     key-store-type: PKCS12
+
+# Logging Configuration (Production)
+logging:
+  level:
+    root: WARN
+    com.moksh.kontext: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+  file:
+    name: logs/kontext.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 3GB
+
+# Actuator Configuration (Production)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+    info:
+      show-values: never
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: false
+      percentiles:
+        http.server.requests: 0.95,0.99
+#      slo:
+#        http.server.requests: 100ms,200ms,500ms,1s,2s
+  tracing:
+    sampling:
+      probability: 0.1
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# Memory and GC Configuration
+# These should be set as JVM arguments, not in properties
+# -Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200

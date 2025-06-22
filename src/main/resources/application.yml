@@ -1,0 +1,76 @@
+# =============================================================================
+# COMMON CONFIGURATION (All Environments)
+# =============================================================================
+spring:
+  application:
+    name: Kontext
+  
+  # Database Configuration (Common)
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+      validation-timeout: 3000
+      leak-detection-threshold: 60000
+  
+  # JPA Configuration (Common)
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+  
+  # Jackson Configuration (Common)
+  jackson:
+    default-property-inclusion: NON_NULL
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: false
+    time-zone: UTC
+
+  
+  # Thread Pool Configuration
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 20
+        queue-capacity: 500
+      thread-name-prefix: kontext-task-
+    scheduling:
+      pool:
+        size: 2
+      thread-name-prefix: kontext-scheduling-
+  
+  # AI Configuration (Common)
+  ai:
+    openai:
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.7
+          max-tokens: 2000
+      
+  # Default Profile
+  profiles:
+    active: dev
+
+# Server Configuration (Common)
+server:
+  servlet:
+    context-path: /api/v1
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  http2:
+    enabled: true
