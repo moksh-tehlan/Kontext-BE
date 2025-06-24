@@ -25,6 +25,7 @@ public class ApiResponse<T> {
         return ApiResponse.<T>builder()
                 .success(true)
                 .data(data)
+                .status(200)
                 .timestamp(LocalDateTime.now())
                 .build();
     }
@@ -34,6 +35,17 @@ public class ApiResponse<T> {
                 .success(true)
                 .message(message)
                 .data(data)
+                .status(200)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+    
+    public static <T> ApiResponse<T> success(T data, String message, int status) {
+        return ApiResponse.<T>builder()
+                .success(true)
+                .message(message)
+                .data(data)
+                .status(status)
                 .timestamp(LocalDateTime.now())
                 .build();
     }

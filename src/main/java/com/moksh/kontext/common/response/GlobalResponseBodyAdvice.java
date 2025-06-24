@@ -8,6 +8,8 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+import javax.validation.constraints.NotNull;
+
 @RestControllerAdvice
 public class GlobalResponseBodyAdvice implements ResponseBodyAdvice<Object> {
     
@@ -35,8 +37,8 @@ public class GlobalResponseBodyAdvice implements ResponseBodyAdvice<Object> {
     
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
-                                Class<? extends HttpMessageConverter<?>> selectedConverterType,
-                                ServerHttpRequest request, ServerHttpResponse response) {
+                                  Class<? extends HttpMessageConverter<?>> selectedConverterType,
+                                  ServerHttpRequest request, ServerHttpResponse response) {
         
         // If body is null, wrap it in success response
         if (body == null) {
