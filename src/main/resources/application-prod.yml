@@ -36,11 +36,19 @@ spring:
       password: ${ADMIN_PASSWORD}
       roles: ADMIN
   
+  # Redis Configuration (Production)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+      
   # Cache Configuration (Production)
   cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=10000,expireAfterAccess=600s
+    type: redis
   
   # Jackson Configuration (Production)
   jackson:

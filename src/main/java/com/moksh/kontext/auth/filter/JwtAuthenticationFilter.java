@@ -1,5 +1,6 @@
 package com.moksh.kontext.auth.filter;
 
+import com.moksh.kontext.auth.service.TokenRedisService;
 import com.moksh.kontext.auth.util.JwtUtil;
 import com.moksh.kontext.user.entity.User;
 import com.moksh.kontext.user.repository.UserRepository;
@@ -26,6 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final TokenRedisService tokenRedisService;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -40,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
-            if (StringUtils.hasText(jwt) && jwtUtil.isTokenValid(jwt) && jwtUtil.isAccessToken(jwt)) {
+            if (StringUtils.hasText(jwt) && jwtUtil.isTokenValid(jwt) && jwtUtil.isAccessToken(jwt) && tokenRedisService.isAccessTokenValid(jwt)) {
                 Long userId = jwtUtil.getUserIdFromToken(jwt);
                 
                 Optional<User> userOptional = userRepository.findById(userId);

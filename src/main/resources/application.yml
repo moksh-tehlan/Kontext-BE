@@ -51,6 +51,17 @@ spring:
         size: 2
       thread-name-prefix: kontext-scheduling-
   
+  # Redis Configuration (Common)
+  data:
+    redis:
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+        
   # AI Configuration (Common)
   ai:
     openai:

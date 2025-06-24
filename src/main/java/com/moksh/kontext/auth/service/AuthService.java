@@ -1,6 +1,7 @@
 package com.moksh.kontext.auth.service;
 
 import com.moksh.kontext.auth.dto.*;
+import com.moksh.kontext.auth.service.TokenRedisService;
 import com.moksh.kontext.auth.util.JwtUtil;
 import com.moksh.kontext.common.exception.BusinessException;
 import com.moksh.kontext.common.exception.ResourceNotFoundException;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Optional;
 
 @Service
@@ -25,6 +27,7 @@ public class AuthService {
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
     private final OtpService otpService;
+    private final TokenRedisService tokenRedisService;
 
     public void sendOtp(SendOtpRequest request) {
         log.debug("Sending OTP to email: {}", request.getEmail());
@@ -64,6 +67,10 @@ public class AuthService {
         String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtUtil.generateRefreshToken(user.getId());
         
+        // Store tokens in Redis with TTL
+        tokenRedisService.storeAccessToken(user.getId(), accessToken, Duration.ofMillis(jwtUtil.getAccessTokenExpirationMs()));
+        tokenRedisService.storeRefreshToken(user.getId(), refreshToken, Duration.ofMillis(jwtUtil.getRefreshTokenExpirationMs()));
+        
         UserDto userDto = userMapper.toDto(user);
         
         log.info("User logged in successfully: {}", user.getEmail());
@@ -92,7 +99,7 @@ public class AuthService {
         String refreshToken = request.getRefreshToken();
         
         // Validate refresh token
-        if (!jwtUtil.isTokenValid(refreshToken) || !jwtUtil.isRefreshToken(refreshToken)) {
+        if (!jwtUtil.isTokenValid(refreshToken) || !jwtUtil.isRefreshToken(refreshToken) || !tokenRedisService.isRefreshTokenValid(refreshToken)) {
             throw new BusinessException("Invalid refresh token");
         }
         
@@ -108,6 +115,9 @@ public class AuthService {
         
         // Generate new access token
         String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail());
+        
+        // Store new access token in Redis
+        tokenRedisService.storeAccessToken(user.getId(), newAccessToken, Duration.ofMillis(jwtUtil.getAccessTokenExpirationMs()));
         
         UserDto userDto = userMapper.toDto(user);
         
@@ -126,8 +136,9 @@ public class AuthService {
     public void logout(Long userId) {
         log.debug("Logging out user ID: {}", userId);
         
-        // In a production app, you might want to blacklist the tokens
-        // For now, we'll just log the logout
+        // Revoke all tokens for the user
+        tokenRedisService.revokeAllUserTokens(userId);
+        
         log.info("User logged out successfully: {}", userId);
     }
 }

@@ -29,9 +29,16 @@ spring:
       password: admin123
       roles: ADMIN
   
+  # Redis Configuration (Development)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      
   # Cache Configuration (Development)
   cache:
-    type: simple
+    type: redis
   
   # Development Tools
   devtools:
