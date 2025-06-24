@@ -1,5 +1,7 @@
 package com.moksh.kontext.config;
 
+import com.moksh.kontext.auth.filter.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -8,7 +10,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -20,14 +25,26 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/actuator/**",
             "/health/**",
             "/info/**",
             "/metrics/**",
-            "/prometheus/**"
+            "/prometheus/**",
+            "/api/auth/**",
+            "/api/users/email/**",
+            "/api/users/google/**",
+            "/swagger-ui/**",
+            "/v3/api-docs/**"
+    };
+
+    private static final String[] PUBLIC_POST_ENDPOINTS = {
+            "/api/users"
     };
 
     @Bean
@@ -47,8 +64,9 @@ public class SecurityConfig {
                     referrerPolicy.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers("POST", PUBLIC_POST_ENDPOINTS).permitAll()
                 .anyRequest().authenticated())
-            .httpBasic(httpBasic -> {});
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             
         return http.build();
     }
@@ -66,5 +84,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
