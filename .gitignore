@@ -42,3 +42,6 @@ out/
 .env.dev
 .env.prod
 *.env
+
+
+/logs
