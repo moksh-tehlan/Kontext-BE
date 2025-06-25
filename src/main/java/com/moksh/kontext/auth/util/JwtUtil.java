@@ -11,6 +11,7 @@ import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -32,7 +33,7 @@ public class JwtUtil {
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
-    public String generateAccessToken(Long userId, String email) {
+    public String generateAccessToken(UUID userId, String email) {
         Instant now = Instant.now();
         Instant expiration = now.plus(accessTokenExpirationMs, ChronoUnit.MILLIS);
 
@@ -46,7 +47,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateRefreshToken(Long userId) {
+    public String generateRefreshToken(UUID userId) {
         Instant now = Instant.now();
         Instant expiration = now.plus(refreshTokenExpirationMs, ChronoUnit.MILLIS);
 
@@ -59,9 +60,9 @@ public class JwtUtil {
                 .compact();
     }
 
-    public Long getUserIdFromToken(String token) {
+    public UUID getUserIdFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        return Long.parseLong(claims.getSubject());
+        return UUID.fromString(claims.getSubject());
     }
 
     public String getEmailFromToken(String token) {

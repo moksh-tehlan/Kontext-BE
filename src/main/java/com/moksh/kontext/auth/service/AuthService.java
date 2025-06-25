@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +33,15 @@ public class AuthService {
     public void sendOtp(SendOtpRequest request) {
         log.debug("Sending OTP to email: {}", request.getEmail());
         
-        // For existing users, just send OTP
-        // For new users, this will be used during registration
+        // Check if user exists
+        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            log.debug("Sending OTP to existing user: {}", request.getEmail());
+        } else {
+            log.debug("Sending OTP to new user (will be created upon successful login): {}", request.getEmail());
+        }
+        
+        // Send OTP regardless of user existence (for both login and registration)
         otpService.generateAndSendOtp(request.getEmail());
         
         log.info("OTP sent successfully to email: {}", request.getEmail());
@@ -47,13 +55,22 @@ public class AuthService {
             throw new BusinessException("Invalid or expired OTP");
         }
         
-        // Find user by email
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + request.getEmail()));
+        // Find or create user by email
+        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        User user;
         
-        // Check if user is active
-        if (!user.getIsActive()) {
-            throw new BusinessException("User account is deactivated");
+        if (existingUser.isPresent()) {
+            user = existingUser.get();
+            log.debug("Existing user found: {}", user.getEmail());
+            
+            // Check if user is active
+            if (!user.getIsActive()) {
+                throw new BusinessException("User account is deactivated");
+            }
+        } else {
+            // Create new user if doesn't exist
+            user = createNewUser(request.getEmail());
+            log.info("New user created and logged in: {}", user.getEmail());
         }
         
         // Verify user's email if not already verified
@@ -63,11 +80,14 @@ public class AuthService {
             log.info("Email verified for user: {}", user.getEmail());
         }
         
-        // Generate tokens
+        // Revoke all existing tokens for this user (security: prevent multiple active sessions)
+        tokenRedisService.revokeAllUserTokens(user.getId());
+        
+        // Generate new tokens
         String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtUtil.generateRefreshToken(user.getId());
         
-        // Store tokens in Redis with TTL
+        // Store new tokens in Redis with TTL
         tokenRedisService.storeAccessToken(user.getId(), accessToken, Duration.ofMillis(jwtUtil.getAccessTokenExpirationMs()));
         tokenRedisService.storeRefreshToken(user.getId(), refreshToken, Duration.ofMillis(jwtUtil.getRefreshTokenExpirationMs()));
         
@@ -104,7 +124,7 @@ public class AuthService {
         }
         
         // Get user from refresh token
-        Long userId = jwtUtil.getUserIdFromToken(refreshToken);
+        UUID userId = jwtUtil.getUserIdFromToken(refreshToken);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
@@ -112,6 +132,9 @@ public class AuthService {
         if (!user.getIsActive()) {
             throw new BusinessException("User account is deactivated");
         }
+        
+        // Revoke all existing access tokens for this user (security: invalidate old access tokens)
+        tokenRedisService.revokeAllUserAccessTokens(user.getId());
         
         // Generate new access token
         String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail());
@@ -133,12 +156,60 @@ public class AuthService {
     }
 
 
-    public void logout(Long userId) {
+    public void logout(UUID userId) {
         log.debug("Logging out user ID: {}", userId);
         
         // Revoke all tokens for the user
         tokenRedisService.revokeAllUserTokens(userId);
         
         log.info("User logged out successfully: {}", userId);
+    }
+
+    private User createNewUser(String email) {
+        try {
+            User newUser = new User();
+            newUser.setEmail(email);
+            
+            // Extract name parts from email
+            String extractedName = extractNameFromEmail(email);
+            String[] nameParts = extractedName.split("\\s+");
+            
+            String firstName = nameParts.length > 0 && !nameParts[0].trim().isEmpty() ? nameParts[0].trim() : "User";
+            String lastName = nameParts.length > 1 && !nameParts[1].trim().isEmpty() ? nameParts[1].trim() : "Account";
+            
+            newUser.setFirstName(firstName);
+            newUser.setLastName(lastName);
+            
+            // Set required fields
+            newUser.setAuthProvider(User.AuthProvider.EMAIL_OTP);
+            newUser.setRole(User.UserRole.USER);
+            newUser.setIsActive(true);
+            newUser.setIsEmailVerified(true); // Auto-verify since they confirmed OTP
+            
+            log.debug("Creating user with firstName: '{}', lastName: '{}', email: '{}'", firstName, lastName, email);
+            
+            User savedUser = userRepository.save(newUser);
+            log.info("New user created with email: {}", email);
+            return savedUser;
+            
+        } catch (Exception e) {
+            log.error("Error creating new user with email: {}", email, e);
+            throw new BusinessException("Failed to create user account: " + e.getMessage());
+        }
+    }
+
+    private String extractNameFromEmail(String email) {
+        // Extract name from email (simple implementation)
+        String[] parts = email.split("@");
+        if (parts.length > 0) {
+            String localPart = parts[0];
+            // Replace dots, underscores, and numbers with spaces
+            String cleanName = localPart.replaceAll("[._\\d]", " ").trim();
+            if (cleanName.isEmpty()) {
+                return "User";
+            }
+            return cleanName;
+        }
+        return "User";
     }
 }

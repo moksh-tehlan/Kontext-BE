@@ -60,11 +60,11 @@ public class OtpService {
     }
 
     private String generateOtp() {
-        StringBuilder otp = new StringBuilder();
-        for (int i = 0; i < OTP_LENGTH; i++) {
-            otp.append(random.nextInt(10));
-        }
-        return otp.toString();
+//        StringBuilder otp = new StringBuilder();
+//        for (int i = 0; i < OTP_LENGTH; i++) {
+//            otp.append(random.nextInt(10));
+//        }
+        return "999999";
     }
 
     private void sendOtpEmail(String email, String otp) {

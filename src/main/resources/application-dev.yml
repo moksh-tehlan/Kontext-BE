@@ -92,10 +92,13 @@ logging:
 
 # Actuator Configuration (Development)
 management:
+  server:
+    port: 8081
   endpoints:
     web:
       exposure:
         include: "*"
+      base-path: /actuator
   endpoint:
     health:
       show-details: always

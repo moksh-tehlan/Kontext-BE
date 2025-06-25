@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -32,7 +34,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserDto getUserById(Long id) {
+    public UserDto getUserById(UUID id) {
         log.debug("Fetching user by id: {}", id);
         User user = userRepository.findById(id)
                 .filter(User::getIsActive)
@@ -63,7 +65,7 @@ public class UserService {
         return userMapper.toDto(savedUser);
     }
 
-    public UserDto updateUser(Long id, UpdateUserDto updateUserDto) {
+    public UserDto updateUser(UUID id, UpdateUserDto updateUserDto) {
         log.debug("Updating user with id: {}", id);
         
         User existingUser = userRepository.findById(id)
@@ -79,7 +81,7 @@ public class UserService {
         return userMapper.toDto(updatedUser);
     }
 
-    public void deleteUser(Long id) {
+    public void deleteUser(UUID id) {
         log.debug("Soft deleting user with id: {}", id);
         
         User user = userRepository.findById(id)
@@ -121,7 +123,7 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
-    public UserDto verifyUserEmail(Long userId) {
+    public UserDto verifyUserEmail(UUID userId) {
         log.debug("Verifying email for user ID: {}", userId);
         
         User user = userRepository.findById(userId)
@@ -149,7 +151,7 @@ public class UserService {
                 .map(userMapper::toDto);
     }
 
-    public UserDto updateUserRole(Long id, User.UserRole role) {
+    public UserDto updateUserRole(UUID id, User.UserRole role) {
         log.debug("Updating user role for id: {} to role: {}", id, role);
         
         User user = userRepository.findById(id)

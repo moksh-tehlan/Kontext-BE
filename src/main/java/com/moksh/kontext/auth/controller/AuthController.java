@@ -1,14 +1,12 @@
 package com.moksh.kontext.auth.controller;
 
 import com.moksh.kontext.auth.dto.*;
-import com.moksh.kontext.user.entity.User;
 import com.moksh.kontext.auth.service.AuthService;
+import com.moksh.kontext.common.util.SecurityContextUtil;
 import com.moksh.kontext.common.response.ApiResponse;
-import com.moksh.kontext.user.dto.UserDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -53,10 +51,10 @@ public class AuthController {
 
 
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@AuthenticationPrincipal User user) {
+    public ApiResponse<Void> logout() {
         log.debug("POST /api/auth/logout - User logout");
         
-        authService.logout(user.getId());
+        authService.logout(SecurityContextUtil.getCurrentUserIdOrThrow());
         return ApiResponse.success(null, "Logout successful");
     }
 }

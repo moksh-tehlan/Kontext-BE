@@ -46,7 +46,7 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
 
-    @NotBlank(message = "Authentication provider is required")
+    @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false)
     private AuthProvider authProvider;
 
