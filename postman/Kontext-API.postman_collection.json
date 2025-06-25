@@ -1255,6 +1255,527 @@
 			]
 		},
 		{
+			"name": "Knowledge Management",
+			"item": [
+				{
+					"name": "Upload File Knowledge (Image/Document)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"File knowledge uploaded successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"File knowledge uploaded successfully\");",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"    pm.expect(responseJson.data).to.have.property('name');",
+									"    pm.expect(responseJson.data).to.have.property('type');",
+									"    pm.expect(responseJson.data).to.have.property('source');",
+									"    ",
+									"    // Store knowledge ID for future requests",
+									"    pm.environment.set('knowledge_id', responseJson.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Web Knowledge",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Web knowledge created successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Web knowledge created successfully\");",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"    pm.expect(responseJson.data).to.have.property('name');",
+									"    pm.expect(responseJson.data.type).to.eql(\"WEB\");",
+									"    pm.expect(responseJson.data).to.have.property('source');",
+									"    ",
+									"    // Store knowledge ID for future requests",
+									"    pm.environment.set('web_knowledge_id', responseJson.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"webUrl\": \"{{web_url}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/web",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"web"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project Knowledge (List)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains knowledge list\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.message).to.eql(\"Knowledge items retrieved successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project Knowledge (Paginated)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains paginated knowledge\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('content');",
+									"    pm.expect(responseJson.data.content).to.be.an('array');",
+									"    pm.expect(responseJson.data).to.have.property('totalElements');",
+									"    pm.expect(responseJson.message).to.eql(\"Knowledge items retrieved successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/paginated?page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"paginated"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Knowledge by Type - Images",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains image knowledge\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.message).to.eql(\"Knowledge items retrieved successfully\");",
+									"    ",
+									"    // Check that all items are IMAGE type",
+									"    responseJson.data.forEach(item => {",
+									"        pm.expect(item.type).to.eql(\"IMAGE\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/type/IMAGE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"type",
+								"IMAGE"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Knowledge by Type - Documents",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains document knowledge\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.message).to.eql(\"Knowledge items retrieved successfully\");",
+									"    ",
+									"    // Check that all items are DOCUMENT type",
+									"    responseJson.data.forEach(item => {",
+									"        pm.expect(item.type).to.eql(\"DOCUMENT\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/type/DOCUMENT",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"type",
+								"DOCUMENT"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Knowledge by Type - Web",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains web knowledge\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.message).to.eql(\"Knowledge items retrieved successfully\");",
+									"    ",
+									"    // Check that all items are WEB type",
+									"    responseJson.data.forEach(item => {",
+									"        pm.expect(item.type).to.eql(\"WEB\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/type/WEB",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"type",
+								"WEB"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Knowledge by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains knowledge data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"    pm.expect(responseJson.data).to.have.property('name');",
+									"    pm.expect(responseJson.data).to.have.property('type');",
+									"    pm.expect(responseJson.data).to.have.property('source');",
+									"    pm.expect(responseJson.message).to.eql(\"Knowledge retrieved successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/{{knowledge_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"{{knowledge_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Knowledge",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains search results\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('content');",
+									"    pm.expect(responseJson.data.content).to.be.an('array');",
+									"    pm.expect(responseJson.message).to.eql(\"Knowledge search completed successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/search?searchTerm={{knowledge_search_term}}&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"search"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "{{knowledge_search_term}}"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Knowledge",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"pm.test(\"Knowledge deleted successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Knowledge deleted successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}/knowledge/{{knowledge_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}",
+								"knowledge",
+								"{{knowledge_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Health & Monitoring",
 			"item": [
 				{
