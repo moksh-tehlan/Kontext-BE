@@ -43,12 +43,11 @@
 							"raw": "{\n    \"email\": \"{{user_email}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/auth/send-otp",
+							"raw": "{{base_url}}/auth/send-otp",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"auth",
 								"send-otp"
 							]
@@ -100,12 +99,11 @@
 							"raw": "{\n    \"email\": \"{{user_email}}\",\n    \"otp\": \"{{otp_code}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/auth/login",
+							"raw": "{{base_url}}/auth/login",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"auth",
 								"login"
 							]
@@ -151,12 +149,11 @@
 							"raw": "{\n    \"idToken\": \"{{google_id_token}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/auth/google",
+							"raw": "{{base_url}}/auth/google",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"auth",
 								"google"
 							]
@@ -200,12 +197,11 @@
 							"raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/auth/refresh",
+							"raw": "{{base_url}}/auth/refresh",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"auth",
 								"refresh"
 							]
@@ -246,12 +242,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/auth/logout",
+							"raw": "{{base_url}}/auth/logout",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"auth",
 								"logout"
 							]
@@ -299,12 +294,11 @@
 							"raw": "{\n    \"firstName\": \"{{new_user_first_name}}\",\n    \"lastName\": \"{{new_user_last_name}}\",\n    \"email\": \"{{new_user_email}}\",\n    \"authProvider\": \"EMAIL_OTP\",\n    \"role\": \"USER\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/users",
+							"raw": "{{base_url}}/users",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users"
 							]
 						}
@@ -341,12 +335,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/users?page=0&size=20",
+							"raw": "{{base_url}}/users?page=0&size=20",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users"
 							],
 							"query": [
@@ -393,12 +386,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/users/{{user_id}}",
+							"raw": "{{base_url}}/users/{{user_id}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"{{user_id}}"
 							]
@@ -430,12 +422,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/users/email/{{user_email}}",
+							"raw": "{{base_url}}/users/email/{{user_email}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"email",
 								"{{user_email}}"
@@ -481,12 +472,11 @@
 							"raw": "{\n    \"firstName\": \"{{updated_first_name}}\",\n    \"lastName\": \"{{updated_last_name}}\",\n    \"nickname\": \"{{updated_nickname}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/users/{{user_id}}",
+							"raw": "{{base_url}}/users/{{user_id}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"{{user_id}}"
 							]
@@ -523,12 +513,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/users/{{user_id}}/verify-email",
+							"raw": "{{base_url}}/users/{{user_id}}/verify-email",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"{{user_id}}",
 								"verify-email"
@@ -566,12 +555,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/users/{{target_user_id}}/role?role=ADMIN",
+							"raw": "{{base_url}}/users/{{target_user_id}}/role?role=ADMIN",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"{{target_user_id}}",
 								"role"
@@ -617,12 +605,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/users/me",
+							"raw": "{{base_url}}/users/me",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"me"
 							]
@@ -667,12 +654,11 @@
 							"raw": "{\n    \"firstName\": \"{{updated_first_name}}\",\n    \"lastName\": \"{{updated_last_name}}\",\n    \"nickname\": \"{{updated_nickname}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/users/me",
+							"raw": "{{base_url}}/users/me",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"me"
 							]
@@ -709,12 +695,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/users/{{target_user_id}}",
+							"raw": "{{base_url}}/users/{{target_user_id}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"{{target_user_id}}"
 							]
@@ -773,12 +758,11 @@
 							"raw": "{\n    \"email\": \"{{user_email}}\",\n    \"otp\": \"{{otp_code}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/auth/login",
+							"raw": "{{base_url}}/auth/login",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"auth",
 								"login"
 							]
@@ -815,12 +799,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/users/me",
+							"raw": "{{base_url}}/users/me",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"me"
 							]
@@ -873,12 +856,11 @@
 							"raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/auth/refresh",
+							"raw": "{{base_url}}/auth/refresh",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"auth",
 								"refresh"
 							]
@@ -914,14 +896,357 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/users/me",
+							"raw": "{{base_url}}/users/me",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"users",
 								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Project Management",
+			"item": [
+				{
+					"name": "Create Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Project created successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Project created successfully\");",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"    pm.expect(responseJson.data).to.have.property('name');",
+									"    ",
+									"    // Store project ID for future requests",
+									"    pm.environment.set('project_id', responseJson.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{project_name}}\",\n    \"description\": \"{{project_description}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Projects (List)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains projects list\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.message).to.eql(\"Projects retrieved successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Projects (Paginated)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains paginated projects\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('content');",
+									"    pm.expect(responseJson.data.content).to.be.an('array');",
+									"    pm.expect(responseJson.data).to.have.property('totalElements');",
+									"    pm.expect(responseJson.message).to.eql(\"Projects retrieved successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/paginated?page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"paginated"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains project data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"    pm.expect(responseJson.data).to.have.property('name');",
+									"    pm.expect(responseJson.message).to.eql(\"Project retrieved successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Project updated successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Project updated successfully\");",
+									"    pm.expect(responseJson.data).to.have.property('id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{updated_project_name}}\",\n    \"description\": \"{{updated_project_description}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Projects",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains search results\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('content');",
+									"    pm.expect(responseJson.data.content).to.be.an('array');",
+									"    pm.expect(responseJson.message).to.eql(\"Projects searched successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/search?searchTerm={{search_term}}&page=0&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"search"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "{{search_term}}"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"pm.test(\"Project deleted successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Project deleted successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/{{project_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"{{project_id}}"
 							]
 						}
 					},

@@ -1,6 +1,7 @@
 package com.moksh.kontext.user.entity;
 
 import com.moksh.kontext.common.entity.BaseEntity;
+import com.moksh.kontext.project.entity.Project;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -59,6 +61,9 @@ public class User extends BaseEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role = UserRole.USER;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Project> projects;
 
     public enum AuthProvider {
         EMAIL_OTP("EMAIL_OTP"),
