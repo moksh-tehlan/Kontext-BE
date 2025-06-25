@@ -166,7 +166,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value()
         );
         
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -182,6 +182,68 @@ public class GlobalExceptionHandler {
         );
         
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    // Knowledge Management Exceptions
+    @ExceptionHandler(UnsupportedFileTypeException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnsupportedFileTypeException(
+            UnsupportedFileTypeException ex, HttpServletRequest request) {
+        log.warn("Unsupported file type: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                "UNSUPPORTED_FILE_TYPE",
+                request.getRequestURI(),
+                HttpStatus.BAD_REQUEST.value()
+        );
+        
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(InvalidWebUrlException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidWebUrlException(
+            InvalidWebUrlException ex, HttpServletRequest request) {
+        log.warn("Invalid web URL: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                "INVALID_WEB_URL",
+                request.getRequestURI(),
+                HttpStatus.BAD_REQUEST.value()
+        );
+        
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    // AWS S3 Exceptions
+    @ExceptionHandler(S3UploadException.class)
+    public ResponseEntity<ApiResponse<Object>> handleS3UploadException(
+            S3UploadException ex, HttpServletRequest request) {
+        log.error("S3 upload failed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                "File upload failed. Please try again.",
+                "S3_UPLOAD_ERROR",
+                request.getRequestURI(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value()
+        );
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(S3DeleteException.class)
+    public ResponseEntity<ApiResponse<Object>> handleS3DeleteException(
+            S3DeleteException ex, HttpServletRequest request) {
+        log.error("S3 delete failed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                "File deletion failed. Please try again.",
+                "S3_DELETE_ERROR",
+                request.getRequestURI(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value()
+        );
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
     @ExceptionHandler(Exception.class)

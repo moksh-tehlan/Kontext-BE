@@ -6,6 +6,8 @@ import com.moksh.kontext.common.util.SecurityContextUtil;
 import com.moksh.kontext.knowledge.dto.CreateKnowledgeDto;
 import com.moksh.kontext.knowledge.dto.KnowledgeDto;
 import com.moksh.kontext.knowledge.entity.Knowledge;
+import com.moksh.kontext.common.exception.InvalidWebUrlException;
+import com.moksh.kontext.common.exception.UnsupportedFileTypeException;
 import com.moksh.kontext.knowledge.mapper.KnowledgeMapper;
 import com.moksh.kontext.knowledge.repository.KnowledgeRepository;
 import com.moksh.kontext.project.entity.Project;
@@ -50,7 +52,7 @@ public class KnowledgeService {
         Knowledge.KnowledgeType knowledgeType = determineKnowledgeType(contentType);
         
         if (knowledgeType == Knowledge.KnowledgeType.WEB) {
-            throw new IllegalArgumentException("File upload not supported for WEB type. Use web URL instead.");
+            throw new UnsupportedFileTypeException("File upload not supported for WEB type. Use web URL instead.");
         }
 
         String s3Url = s3Service.uploadFile(file, getS3Folder(knowledgeType));
@@ -181,20 +183,38 @@ public class KnowledgeService {
     }
 
     private Knowledge.KnowledgeType determineKnowledgeType(String contentType) {
-        if (s3Service.isImageFile(contentType)) {
+        if (isImageFile(contentType)) {
             return Knowledge.KnowledgeType.IMAGE;
-        } else if (s3Service.isDocumentFile(contentType)) {
+        } else if (isDocumentFile(contentType)) {
             return Knowledge.KnowledgeType.DOCUMENT;
         } else {
-            throw new IllegalArgumentException("Unsupported file type: " + contentType);
+            throw new UnsupportedFileTypeException("Unsupported file type: " + contentType);
         }
+    }
+
+    private boolean isImageFile(String contentType) {
+        return contentType != null && contentType.startsWith("image/");
+    }
+
+    private boolean isDocumentFile(String contentType) {
+        return contentType != null && (
+            contentType.equals("application/pdf") ||
+            contentType.equals("application/msword") ||
+            contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
+            contentType.equals("application/vnd.ms-powerpoint") ||
+            contentType.equals("application/vnd.openxmlformats-officedocument.presentationml.presentation") ||
+            contentType.equals("text/plain") ||
+            contentType.equals("application/rtf") ||
+            contentType.equals("application/vnd.ms-excel") ||
+            contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        );
     }
 
     private String getS3Folder(Knowledge.KnowledgeType type) {
         return switch (type) {
             case IMAGE -> "images";
             case DOCUMENT -> "documents";
-            case WEB -> throw new IllegalArgumentException("WEB type does not use S3 storage");
+            case WEB -> throw new UnsupportedFileTypeException("WEB type does not use S3 storage");
         };
     }
 
@@ -217,13 +237,13 @@ public class KnowledgeService {
 
     private void validateWebUrl(String url) {
         if (url == null || url.trim().isEmpty()) {
-            throw new IllegalArgumentException("Web URL cannot be empty");
+            throw new InvalidWebUrlException("Web URL cannot be empty");
         }
         
         try {
             new URL(url);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid web URL format");
+            throw new InvalidWebUrlException("Invalid web URL format: " + url, e);
         }
     }
 }

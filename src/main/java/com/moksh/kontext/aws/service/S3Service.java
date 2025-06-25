@@ -1,5 +1,7 @@
 package com.moksh.kontext.aws.service;
 
+import com.moksh.kontext.common.exception.S3DeleteException;
+import com.moksh.kontext.common.exception.S3UploadException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,8 +26,8 @@ public class S3Service {
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
-    @Value("${aws.s3.base-url}")
-    private String baseUrl;
+    @Value("${aws.cloudfront.url}")
+    private String cloudFrontUrl;
 
     public String uploadFile(MultipartFile file, String folder) {
         try {
@@ -41,17 +43,17 @@ public class S3Service {
 
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
             
-            String s3Url = baseUrl + "/" + key;
-            log.info("File uploaded successfully to S3: {}", s3Url);
+            String cloudFrontUrl = this.cloudFrontUrl + "/" + key;
+            log.info("File uploaded successfully to S3, accessible via CloudFront: {}", cloudFrontUrl);
             
-            return s3Url;
+            return cloudFrontUrl;
             
         } catch (IOException e) {
             log.error("Error reading file content: {}", e.getMessage());
-            throw new RuntimeException("Failed to upload file to S3", e);
+            throw new S3UploadException("Failed to read file content during S3 upload", e);
         } catch (S3Exception e) {
             log.error("S3 error during file upload: {}", e.getMessage());
-            throw new RuntimeException("Failed to upload file to S3", e);
+            throw new S3UploadException("Failed to upload file to S3: " + e.getMessage(), e);
         }
     }
 
@@ -69,7 +71,7 @@ public class S3Service {
             
         } catch (S3Exception e) {
             log.error("S3 error during file deletion: {}", e.getMessage());
-            throw new RuntimeException("Failed to delete file from S3", e);
+            throw new S3DeleteException("Failed to delete file from S3: " + e.getMessage(), e);
         }
     }
 
@@ -81,23 +83,12 @@ public class S3Service {
         return UUID.randomUUID() + extension;
     }
 
-    private String extractKeyFromUrl(String s3Url) {
-        return s3Url.replace(baseUrl + "/", "");
+    private String extractKeyFromUrl(String url) {
+        // Handle both CloudFront and S3 URLs
+        if (url.startsWith(cloudFrontUrl)) {
+            return url.replace(cloudFrontUrl + "/", "");
+        }
+        return url; // If it's already just the key
     }
 
-    public boolean isImageFile(String contentType) {
-        return contentType != null && contentType.startsWith("image/");
-    }
-
-    public boolean isDocumentFile(String contentType) {
-        return contentType != null && (
-            contentType.equals("application/pdf") ||
-            contentType.equals("application/msword") ||
-            contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
-            contentType.equals("application/vnd.ms-powerpoint") ||
-            contentType.equals("application/vnd.openxmlformats-officedocument.presentationml.presentation") ||
-            contentType.equals("text/plain") ||
-            contentType.equals("application/rtf")
-        );
-    }
 }

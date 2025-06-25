@@ -91,3 +91,13 @@ server:
     min-response-size: 1024
   http2:
     enabled: true
+
+# AWS Configuration (Common)
+aws:
+  access-key-id: ${AWS_ACCESS_KEY_ID:your-aws-access-key-id}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY:your-aws-secret-access-key}
+  region: ${AWS_REGION:us-east-1}
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME:kontext-dev-bucket}
+  cloudfront:
+    url: ${AWS_CLOUDFRONT_URL:https://your-cloudfront-domain.cloudfront.net}

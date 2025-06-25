@@ -1,4 +1,4 @@
-package com.moksh.kontext.aws.config;
+package com.moksh.kontext.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
