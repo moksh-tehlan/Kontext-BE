@@ -1,5 +1,7 @@
 package com.moksh.kontext.chat.controller;
 
+import com.moksh.kontext.chat.dto.ChatRequest;
+import com.moksh.kontext.ai.service.RagChatService;
 import com.moksh.kontext.chat.dto.ChatDto;
 import com.moksh.kontext.chat.dto.CreateChatDto;
 import com.moksh.kontext.chat.dto.UpdateChatDto;
@@ -24,6 +26,7 @@ import java.util.UUID;
 public class ChatController {
 
     private final ChatService chatService;
+    private final RagChatService ragChatService;
 
     @PostMapping
     public ApiResponse<ChatDto> createChat(@Valid @RequestBody CreateChatDto createChatDto) {
@@ -88,5 +91,14 @@ public class ChatController {
         PageResponse<ChatDto> pageResponse = PageResponse.of(chats);
         
         return ApiResponse.success(pageResponse, "Chats searched successfully");
+    }
+
+    @PostMapping("{id}/chat")
+    public ApiResponse<String> chatWithAI(@Valid @RequestBody ChatRequest chatRequest, @PathVariable UUID id) {
+        UUID projectId = chatService.getChatById(id).getProjectId();
+
+        String aiResponse = ragChatService.chatWithContext(chatRequest.getQuery(), projectId);
+
+        return ApiResponse.success(aiResponse, "AI chat response generated successfully");
     }
 }

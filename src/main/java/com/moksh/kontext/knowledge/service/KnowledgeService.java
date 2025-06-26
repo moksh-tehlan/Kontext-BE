@@ -1,5 +1,6 @@
 package com.moksh.kontext.knowledge.service;
 
+import com.moksh.kontext.ai.service.VectorService;
 import com.moksh.kontext.aws.service.S3Service;
 import com.moksh.kontext.common.exception.ResourceNotFoundException;
 import com.moksh.kontext.common.util.SecurityContextUtil;
@@ -13,6 +14,7 @@ import com.moksh.kontext.knowledge.repository.KnowledgeRepository;
 import com.moksh.kontext.project.entity.Project;
 import com.moksh.kontext.project.repository.ProjectRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,8 @@ public class KnowledgeService {
 
     @Autowired
     private S3Service s3Service;
+    @Autowired
+    private VectorService vectorService;
 
     public KnowledgeDto uploadFileKnowledge(UUID projectId, MultipartFile file) {
         UUID currentUserId = SecurityContextUtil.getCurrentUserId();
@@ -67,6 +72,11 @@ public class KnowledgeService {
         knowledge.setProject(project);
         
         Knowledge savedKnowledge = knowledgeRepository.save(knowledge);
+
+        // create dummy documents for vectorstore
+        List<Document> documents = createDummyDocuments(savedKnowledge.getId());
+
+        vectorService.addDocuments(documents);
         log.info("File knowledge created: {} for project: {}", fileName, projectId);
         
         return knowledgeMapper.toDto(savedKnowledge);
@@ -246,4 +256,78 @@ public class KnowledgeService {
             throw new InvalidWebUrlException("Invalid web URL format: " + url, e);
         }
     }
+
+    public static List<Document> createDummyDocuments(UUID knowledgeId) {
+        // Dummy Project IDs for testing filters
+
+        return List.of(
+                // Document 1: Related to Project 1, focusing on "Spring Boot Microservices"
+                new Document(
+                        "Microservices architecture with Spring Boot empowers developers to build scalable, resilient, and independently deployable services. Key components include Eureka for service discovery, Feign for declarative REST clients, and Resilience4j for circuit breaking.  For data, developers often use Spring Data JPA with PostgreSQL, and for messaging, Apache Kafka is a popular choice.",
+                        Map.of(
+                                "knowledge_id", knowledgeId,
+                                "title", "Introduction to Spring Boot Microservices",
+                                "author", "Alice Smith",
+                                "version", "1.0",
+                                "source", "internal_documentation"
+                        )
+                ),
+                // Document 2: Related to Project 1, focusing on "Spring Security"
+                new Document(
+                        "Spring Security provides comprehensive security services for Java EE-based enterprise software applications. It offers authentication and authorization support, protecting your application from common vulnerabilities. OAuth2 and JWT (JSON Web Tokens) are frequently used for secure API communication. Implementing a custom UserDetailsService is common for integrating with existing user stores.",
+                        Map.of(
+                                "knowledge_id", knowledgeId,
+                                "title", "Securing Applications with Spring Security",
+                                "author", "Bob Johnson",
+                                "version", "1.2",
+                                "source", "company_wiki"
+                        )
+                ),
+                // Document 3: Related to Project 2, focusing on "Cloud Deployment (AWS)"
+                new Document(
+                        "Deploying Spring Boot applications to AWS involves leveraging services like EC2 for compute, RDS for managed databases (e.g., PostgreSQL, MySQL), and S3 for object storage. For CI/CD, AWS CodePipeline and CodeDeploy are often used. Containerization with Docker and orchestration with EKS (Elastic Kubernetes Service) or ECS (Elastic Container Service) are common deployment strategies.",
+                        Map.of(
+                                "knowledge_id", knowledgeId,
+                                "title", "AWS Deployment Strategies for Spring Boot",
+                                "author", "Charlie Brown",
+                                "version", "2.0",
+                                "source", "dev_blog"
+                        )
+                ),
+                // Document 4: Related to Project 2, focusing on "Testing in Spring"
+                new Document(
+                        "Effective testing in Spring applications involves unit, integration, and end-to-end tests. Spring Boot provides excellent support for testing with `@SpringBootTest`, `@WebMvcTest`, and `@DataJpaTest`. Mockito is widely used for mocking dependencies, and JUnit 5 is the standard testing framework. Property-based testing can also be explored for robust test suites.",
+                        Map.of(
+                                "knowledge_id", knowledgeId,
+                                "title", "Comprehensive Testing in Spring Boot",
+                                "author", "Alice Smith",
+                                "version", "1.1",
+                                "source", "internal_training_material"
+                        )
+                ),
+                // Document 5: Related to Project 3, but less relevant to typical Spring context
+                new Document(
+                        "The principles of agile software development emphasize iterative development, collaboration, and responding to change. Scrum is a popular agile framework that defines roles, events, and artifacts to deliver value incrementally. Daily stand-ups, sprint planning, and sprint reviews are key ceremonies.",
+                        Map.of(
+                                "knowledge_id", knowledgeId,
+                                "title", "Understanding Agile Methodologies",
+                                "author", "David Lee",
+                                "version", "1.0",
+                                "source", "external_article"
+                        )
+                ),
+                // Document 6: Another document for Project 1, on a slightly different topic
+                new Document(
+                        "Logging and monitoring are critical for production systems. In Spring Boot, Logback is the default logging framework, and metrics can be exposed via Micrometer and viewed with Prometheus and Grafana. Distributed tracing with Brave and Zipkin helps in debugging microservices by visualizing request flows across services.",
+                        Map.of(
+                                "knowledge_id", knowledgeId,
+                                "title", "Logging and Monitoring Spring Boot Applications",
+                                "author", "Alice Smith",
+                                "version", "1.0",
+                                "source", "internal_documentation"
+                        )
+                )
+        );
+    }
+
 }
