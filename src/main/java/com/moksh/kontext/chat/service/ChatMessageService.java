@@ -302,7 +302,6 @@ public class ChatMessageService implements ChatMemoryRepository{
     @Transactional
     public void saveAll(String conversationId, List<Message> messages) {
         UUID chatId = UUID.fromString(conversationId);
-//        chatMessageRepository.deleteByChatId(chatId);
         Chat chat = getChatEntity(chatId);
 
         for (Message message : messages) {

@@ -1,6 +1,7 @@
 package com.moksh.kontext.ai.service;
 
 import com.moksh.kontext.ai.advisor.KontextChatAdvisor;
+import com.moksh.kontext.ai.advisor.UnifiedChatMemoryAdvisor;
 import com.moksh.kontext.chat.repository.ChatMessageRepository;
 import com.moksh.kontext.chat.service.ChatMessageService;
 import com.moksh.kontext.chat.service.ChatService;
@@ -9,14 +10,7 @@ import com.moksh.kontext.project.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMemoryAdvisor;
-import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
-import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
-import org.springframework.ai.chat.memory.repository.jdbc.PostgresChatMemoryRepositoryDialect;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
@@ -81,14 +75,18 @@ public class RagChatService {
 
             List<Document> documents = retriever.retrieve(new Query(message));
 
-            ChatMemoryRepository chatMemoryRepository = new ChatMessageService(chatMessageRepository,chatService);
-
-            MessageWindowChatMemory messageWindowChatMemory = MessageWindowChatMemory.builder().chatMemoryRepository(chatMemoryRepository).maxMessages(10).build();
+            ChatMessageService chatMessageService = new ChatMessageService(chatMessageRepository,chatService);
 
             ChatClient ragChatClient = ChatClient.builder(chatModel)
                     .defaultAdvisors(KontextChatAdvisor.builder(documents).build())
-                    .defaultAdvisors(VectorStoreChatMemoryAdvisor.builder(chatVectorStore).conversationId(chatId.toString()).defaultTopK(10).build())
-//                    .defaultAdvisors(MessageChatMemoryAdvisor.builder(messageWindowChatMemory).conversationId(chatId.toString()).build())
+                    .defaultAdvisors(UnifiedChatMemoryAdvisor.builder()
+                            .chatVectorStore(chatVectorStore)
+                            .chatMessageService(chatMessageService)
+                            .conversationId(chatId.toString())
+                            .maxMessages(10)
+                            .vectorTopK(5)
+                            .vectorSimilarityThreshold(0.7)
+                            .build())
                     .build();
 
             String response = ragChatClient.prompt()
