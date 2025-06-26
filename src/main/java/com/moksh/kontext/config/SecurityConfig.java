@@ -37,9 +37,9 @@ public class SecurityConfig {
             "/info/**",
             "/metrics/**",
             "/prometheus/**",
-            "/api/auth/**",
-            "/api/users/email/**",
-            "/api/users/google/**",
+            "/auth/**",
+            "/users/email/**",
+            "/users/google/**",
             "/swagger-ui/**",
             "/v3/api-docs/**"
     };

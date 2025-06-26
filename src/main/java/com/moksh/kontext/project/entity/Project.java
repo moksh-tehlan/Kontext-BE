@@ -1,5 +1,6 @@
 package com.moksh.kontext.project.entity;
 
+import com.moksh.kontext.chat.entity.Chat;
 import com.moksh.kontext.common.entity.BaseEntity;
 import com.moksh.kontext.user.entity.User;
 import jakarta.persistence.*;
@@ -35,4 +36,7 @@ public class Project extends BaseEntity {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<com.moksh.kontext.knowledge.entity.Knowledge> knowledgeItems;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Chat> chats;
 }
