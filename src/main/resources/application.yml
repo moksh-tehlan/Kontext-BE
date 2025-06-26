@@ -82,7 +82,11 @@ spring:
         api-key: ${QDRANT_API_KEY:}
         collection-name: ${QDRANT_COLLECTION_NAME:kontext_knowledge}
         initialize-schema: true
-
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
   # Default Profile
   profiles:
     active: dev

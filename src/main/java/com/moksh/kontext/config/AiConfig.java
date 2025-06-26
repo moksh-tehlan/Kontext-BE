@@ -1,10 +1,13 @@
 package com.moksh.kontext.config;
 
+import io.qdrant.client.QdrantClient;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.qdrant.QdrantVectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,4 +48,11 @@ public class AiConfig {
         return openAiEmbeddingModel;
     }
 
+    @Bean(name = "chat_vector_store")
+    public VectorStore chatVectorStore(QdrantClient qdrantClient,OpenAiEmbeddingModel openAiEmbeddingModel) {
+        return QdrantVectorStore.builder(
+                qdrantClient,openAiEmbeddingModel
+        )
+                .collectionName("chat_vector_store").initializeSchema(true).build();
+    }
 }

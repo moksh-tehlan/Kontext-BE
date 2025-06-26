@@ -81,6 +81,18 @@ public class ChatService {
         return chatMapper.toDto(chat);
     }
 
+    @Transactional(readOnly = true)
+    public Chat getChatEntityById(UUID chatId) {
+        UUID currentUserId = SecurityContextUtil.getCurrentUserId();
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
+
+        projectRepository.findByIdAndUserIdAndIsActiveTrue(chat.getProject().getId(), currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+
+        return chat;
+    }
+
     public ChatDto updateChat(UUID chatId, UpdateChatDto updateChatDto) {
         UUID currentUserId = SecurityContextUtil.getCurrentUserId();
         Chat chat = chatRepository.findById(chatId)

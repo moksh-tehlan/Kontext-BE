@@ -97,7 +97,7 @@ public class ChatController {
     public ApiResponse<String> chatWithAI(@Valid @RequestBody ChatRequest chatRequest, @PathVariable UUID id) {
         UUID projectId = chatService.getChatById(id).getProjectId();
 
-        String aiResponse = ragChatService.chatWithContext(chatRequest.getQuery(), projectId);
+        String aiResponse = ragChatService.chatWithContext(chatRequest.getQuery(), projectId,id);
 
         return ApiResponse.success(aiResponse, "AI chat response generated successfully");
     }
