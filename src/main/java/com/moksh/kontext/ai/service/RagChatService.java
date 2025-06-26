@@ -1,5 +1,6 @@
 package com.moksh.kontext.ai.service;
 
+import com.moksh.kontext.ai.advisor.KontextChatAdvisor;
 import com.moksh.kontext.knowledge.service.KnowledgeService;
 import com.moksh.kontext.project.service.ProjectService;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -29,9 +33,11 @@ public class RagChatService {
         log.info("Processing RAG chat request for project: {}", projectId);
         
         try {
-            List<String> knowledgeIds = knowledgeService.getProjectKnowledge(projectId).stream().map(project -> project.getId().toString()).toList();
+            String[] knowledgeIds = knowledgeService.getProjectKnowledge(projectId).stream()
+                            .map(project -> project.getId().toString()).toArray(String[]::new);
 
-            // Create filter for project context
+                    // Create filter for project context
+
             Filter.Expression knowledgeFilter = new FilterExpressionBuilder()
                     .in("knowledge_id", knowledgeIds)
                     .build();
@@ -43,8 +49,11 @@ public class RagChatService {
                     .filterExpression(knowledgeFilter)
                     .build();
 
+            List<Document> documents = retriever.retrieve(new Query(message));
             ChatClient ragChatClient = ChatClient.builder(chatModel)
-                    .defaultAdvisors(a -> a.param(QuestionAnswerAdvisor.RETRIEVED_DOCUMENTS, retriever))
+                    .defaultAdvisors(KontextChatAdvisor.builder(
+                            documents
+                    ).build())
                     .build();
 
             String response = ragChatClient.prompt()
