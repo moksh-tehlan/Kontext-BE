@@ -36,8 +36,6 @@ public class RagChatService {
             String[] knowledgeIds = knowledgeService.getProjectKnowledge(projectId).stream()
                             .map(project -> project.getId().toString()).toArray(String[]::new);
 
-                    // Create filter for project context
-
             Filter.Expression knowledgeFilter = new FilterExpressionBuilder()
                     .in("knowledge_id", knowledgeIds)
                     .build();
