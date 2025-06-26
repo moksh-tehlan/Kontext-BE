@@ -265,7 +265,7 @@ public class KnowledgeService {
                 new Document(
                         "Microservices architecture with Spring Boot empowers developers to build scalable, resilient, and independently deployable services. Key components include Eureka for service discovery, Feign for declarative REST clients, and Resilience4j for circuit breaking.  For data, developers often use Spring Data JPA with PostgreSQL, and for messaging, Apache Kafka is a popular choice.",
                         Map.of(
-                                "knowledge_id", knowledgeId,
+                                "knowledge_id", knowledgeId.toString(),
                                 "title", "Introduction to Spring Boot Microservices",
                                 "author", "Alice Smith",
                                 "version", "1.0",
@@ -276,7 +276,7 @@ public class KnowledgeService {
                 new Document(
                         "Spring Security provides comprehensive security services for Java EE-based enterprise software applications. It offers authentication and authorization support, protecting your application from common vulnerabilities. OAuth2 and JWT (JSON Web Tokens) are frequently used for secure API communication. Implementing a custom UserDetailsService is common for integrating with existing user stores.",
                         Map.of(
-                                "knowledge_id", knowledgeId,
+                                "knowledge_id", knowledgeId.toString(),
                                 "title", "Securing Applications with Spring Security",
                                 "author", "Bob Johnson",
                                 "version", "1.2",
@@ -287,7 +287,7 @@ public class KnowledgeService {
                 new Document(
                         "Deploying Spring Boot applications to AWS involves leveraging services like EC2 for compute, RDS for managed databases (e.g., PostgreSQL, MySQL), and S3 for object storage. For CI/CD, AWS CodePipeline and CodeDeploy are often used. Containerization with Docker and orchestration with EKS (Elastic Kubernetes Service) or ECS (Elastic Container Service) are common deployment strategies.",
                         Map.of(
-                                "knowledge_id", knowledgeId,
+                                "knowledge_id", knowledgeId.toString(),
                                 "title", "AWS Deployment Strategies for Spring Boot",
                                 "author", "Charlie Brown",
                                 "version", "2.0",
@@ -298,7 +298,7 @@ public class KnowledgeService {
                 new Document(
                         "Effective testing in Spring applications involves unit, integration, and end-to-end tests. Spring Boot provides excellent support for testing with `@SpringBootTest`, `@WebMvcTest`, and `@DataJpaTest`. Mockito is widely used for mocking dependencies, and JUnit 5 is the standard testing framework. Property-based testing can also be explored for robust test suites.",
                         Map.of(
-                                "knowledge_id", knowledgeId,
+                                "knowledge_id", knowledgeId.toString(),
                                 "title", "Comprehensive Testing in Spring Boot",
                                 "author", "Alice Smith",
                                 "version", "1.1",
@@ -309,7 +309,7 @@ public class KnowledgeService {
                 new Document(
                         "The principles of agile software development emphasize iterative development, collaboration, and responding to change. Scrum is a popular agile framework that defines roles, events, and artifacts to deliver value incrementally. Daily stand-ups, sprint planning, and sprint reviews are key ceremonies.",
                         Map.of(
-                                "knowledge_id", knowledgeId,
+                                "knowledge_id", knowledgeId.toString(),
                                 "title", "Understanding Agile Methodologies",
                                 "author", "David Lee",
                                 "version", "1.0",
@@ -320,7 +320,7 @@ public class KnowledgeService {
                 new Document(
                         "Logging and monitoring are critical for production systems. In Spring Boot, Logback is the default logging framework, and metrics can be exposed via Micrometer and viewed with Prometheus and Grafana. Distributed tracing with Brave and Zipkin helps in debugging microservices by visualizing request flows across services.",
                         Map.of(
-                                "knowledge_id", knowledgeId,
+                                "knowledge_id", knowledgeId.toString(),
                                 "title", "Logging and Monitoring Spring Boot Applications",
                                 "author", "Alice Smith",
                                 "version", "1.0",

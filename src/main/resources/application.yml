@@ -77,13 +77,12 @@ spring:
     vectorstore:
       qdrant:
         host: ${QDRANT_HOST:localhost}
-        port: ${QDRANT_PORT:6334}
-        grpc-port: ${QDRANT_GRPC_PORT:6334}
+        port: ${QDRANT_GRPC_PORT:6334}
         use-tls: ${QDRANT_USE_TLS:false}
         api-key: ${QDRANT_API_KEY:}
         collection-name: ${QDRANT_COLLECTION_NAME:kontext_knowledge}
-        dimension: ${QDRANT_VECTOR_DIMENSION:1536}
-      
+        initialize-schema: true
+
   # Default Profile
   profiles:
     active: dev
