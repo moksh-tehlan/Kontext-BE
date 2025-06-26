@@ -101,3 +101,8 @@ aws:
     bucket-name: ${AWS_S3_BUCKET_NAME:kontext-dev-bucket}
   cloudfront:
     url: ${AWS_CLOUDFRONT_URL:https://your-cloudfront-domain.cloudfront.net}
+
+# Google OAuth2 Configuration (Common)
+google:
+  oauth2:
+    client-id: ${GOOGLE_OAUTH2_CLIENT_ID:your-google-client-id}

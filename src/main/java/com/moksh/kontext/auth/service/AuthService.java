@@ -5,6 +5,8 @@ import com.moksh.kontext.auth.service.TokenRedisService;
 import com.moksh.kontext.auth.util.JwtUtil;
 import com.moksh.kontext.common.exception.BusinessException;
 import com.moksh.kontext.common.exception.ResourceNotFoundException;
+import com.moksh.kontext.google.dto.GoogleUserInfo;
+import com.moksh.kontext.google.service.GoogleService;
 import com.moksh.kontext.user.dto.UserDto;
 import com.moksh.kontext.user.entity.User;
 import com.moksh.kontext.user.mapper.UserMapper;
@@ -29,6 +31,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final OtpService otpService;
     private final TokenRedisService tokenRedisService;
+    private final GoogleService googleService;
 
     public void sendOtp(SendOtpRequest request) {
         log.debug("Sending OTP to email: {}", request.getEmail());
@@ -107,10 +110,77 @@ public class AuthService {
     public AuthResponse loginWithGoogle(GoogleLoginRequest request) {
         log.debug("Attempting Google login with ID token");
         
-        // In a real implementation, you would validate the Google ID token here
-        // For now, we'll assume the token is valid and extract user info
-        // This is a placeholder - implement Google token validation
-        throw new BusinessException("Google login not implemented yet");
+        // Verify Google ID token and extract user information
+        GoogleUserInfo googleUserInfo = googleService.verifyGoogleToken(request.getIdToken());
+        
+        // Find existing user by email or Google ID
+        Optional<User> existingUser = userRepository.findByEmail(googleUserInfo.getEmail());
+        if (existingUser.isEmpty() && googleUserInfo.getGoogleId() != null) {
+            // Also check by Google ID if email lookup fails
+            existingUser = userRepository.findByGoogleId(googleUserInfo.getGoogleId());
+        }
+        
+        User user;
+        if (existingUser.isPresent()) {
+            user = existingUser.get();
+            log.debug("Existing user found: {}", user.getEmail());
+            
+            // Check if user is active
+            if (!user.getIsActive()) {
+                throw new BusinessException("User account is deactivated");
+            }
+            
+            // Update Google ID if not set
+            if (user.getGoogleId() == null && googleUserInfo.getGoogleId() != null) {
+                user.setGoogleId(googleUserInfo.getGoogleId());
+            }
+            
+            // Update profile picture if available and not set
+            if (user.getProfilePictureUrl() == null && googleUserInfo.getPictureUrl() != null) {
+                user.setProfilePictureUrl(googleUserInfo.getPictureUrl());
+            }
+            
+            // Update auth provider if it was EMAIL_OTP
+            if (user.getAuthProvider() == User.AuthProvider.EMAIL_OTP) {
+                user.setAuthProvider(User.AuthProvider.GOOGLE);
+            }
+            
+            userRepository.save(user);
+        } else {
+            // Create new user from Google info
+            user = createNewUserFromGoogle(googleUserInfo);
+            log.info("New user created from Google login: {}", user.getEmail());
+        }
+        
+        // Verify user's email if not already verified (Google provides verified emails)
+        if (!user.getIsEmailVerified() && googleUserInfo.isEmailVerified()) {
+            user.setIsEmailVerified(true);
+            userRepository.save(user);
+            log.info("Email verified for Google user: {}", user.getEmail());
+        }
+        
+        // Revoke all existing tokens for this user (security: prevent multiple active sessions)
+        tokenRedisService.revokeAllUserTokens(user.getId());
+        
+        // Generate new tokens
+        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
+        
+        // Store new tokens in Redis with TTL
+        tokenRedisService.storeAccessToken(user.getId(), accessToken, Duration.ofMillis(jwtUtil.getAccessTokenExpirationMs()));
+        tokenRedisService.storeRefreshToken(user.getId(), refreshToken, Duration.ofMillis(jwtUtil.getRefreshTokenExpirationMs()));
+        
+        UserDto userDto = userMapper.toDto(user);
+        
+        log.info("User logged in successfully via Google: {}", user.getEmail());
+        
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtUtil.getAccessTokenExpirationMs() / 1000) // Convert to seconds
+                .user(userDto)
+                .build();
     }
 
     public AuthResponse refreshToken(RefreshTokenRequest request) {
@@ -194,6 +264,49 @@ public class AuthService {
             
         } catch (Exception e) {
             log.error("Error creating new user with email: {}", email, e);
+            throw new BusinessException("Failed to create user account: " + e.getMessage());
+        }
+    }
+
+    private User createNewUserFromGoogle(GoogleUserInfo googleUserInfo) {
+        try {
+            User newUser = new User();
+            newUser.setEmail(googleUserInfo.getEmail());
+            
+            // Use Google provided names or extract from email as fallback
+            String firstName = googleUserInfo.getFirstName();
+            String lastName = googleUserInfo.getLastName();
+            
+            if (firstName == null || firstName.trim().isEmpty()) {
+                String extractedName = extractNameFromEmail(googleUserInfo.getEmail());
+                String[] nameParts = extractedName.split("\\s+");
+                firstName = nameParts.length > 0 && !nameParts[0].trim().isEmpty() ? nameParts[0].trim() : "User";
+                lastName = nameParts.length > 1 && !nameParts[1].trim().isEmpty() ? nameParts[1].trim() : "Account";
+            } else if (lastName == null || lastName.trim().isEmpty()) {
+                lastName = "Account";
+            }
+            
+            newUser.setFirstName(firstName);
+            newUser.setLastName(lastName);
+            
+            // Set Google-specific fields
+            newUser.setGoogleId(googleUserInfo.getGoogleId());
+            newUser.setProfilePictureUrl(googleUserInfo.getPictureUrl());
+            
+            // Set required fields
+            newUser.setAuthProvider(User.AuthProvider.GOOGLE);
+            newUser.setRole(User.UserRole.USER);
+            newUser.setIsActive(true);
+            newUser.setIsEmailVerified(googleUserInfo.isEmailVerified());
+            
+            log.debug("Creating Google user with firstName: '{}', lastName: '{}', email: '{}'", firstName, lastName, googleUserInfo.getEmail());
+            
+            User savedUser = userRepository.save(newUser);
+            log.info("New Google user created with email: {}", googleUserInfo.getEmail());
+            return savedUser;
+            
+        } catch (Exception e) {
+            log.error("Error creating new Google user with email: {}", googleUserInfo.getEmail(), e);
             throw new BusinessException("Failed to create user account: " + e.getMessage());
         }
     }
