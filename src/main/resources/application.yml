@@ -91,6 +91,21 @@ spring:
   profiles:
     active: dev
   
+  # Tracing Configuration
+  sleuth:
+    zipkin:
+      enabled: false
+    sampler:
+      probability: 0.0
+      
+# Micrometer Tracing Configuration (for Spring Boot 3+)
+management:
+  tracing:
+    enabled: false
+  zipkin:
+    tracing:
+      endpoint: ""
+  
   # Spring Cloud AWS Configuration
   cloud:
     aws:
