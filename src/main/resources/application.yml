@@ -90,6 +90,17 @@ spring:
   # Default Profile
   profiles:
     active: dev
+  
+  # Spring Cloud AWS Configuration
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION}
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+      sqs:
+        region: ${AWS_REGION}
 
 # JWT Configuration (Common)
 jwt:

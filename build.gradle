@@ -33,33 +33,49 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
     implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'org.springframework.ai:spring-ai-starter-vector-store-qdrant'
     implementation 'org.springframework.ai:spring-ai-rag'
+
     implementation 'io.grpc:grpc-netty-shaded:1.57.2'
+
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
     implementation 'org.modelmapper:modelmapper:3.2.0'
+
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'software.amazon.awssdk:s3:2.25.11'
-    implementation 'software.amazon.awssdk:sts:2.25.11'
-    implementation 'software.amazon.awssdk:sqs:2.25.11'
+
+    implementation 'software.amazon.awssdk:s3:2.31.71'
+    implementation 'software.amazon.awssdk:sts:2.31.71'
+    implementation 'software.amazon.awssdk:sqs:2.31.71'
+
     implementation 'org.springframework.boot:spring-boot-starter-integration'
+
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs:3.4.0'  // latest Spring Cloud AWS SQS :contentReference[oaicite:1]{index=1}
+
     implementation 'org.springframework.retry:spring-retry'
     implementation 'org.springframework:spring-aspects'
+
     implementation 'com.google.api-client:google-api-client:2.4.0'
     implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
+
     compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-    runtimeOnly 'org.postgresql:postgresql'
     developmentOnly 'org.springframework.ai:spring-ai-spring-boot-docker-compose'
-    annotationProcessor 'org.projectlombok:lombok'
+
+    runtimeOnly 'org.postgresql:postgresql'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -68,9 +84,11 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+        mavenBom "software.amazon.awssdk:bom:2.31.71"  // align AWS SDK versions :contentReference[oaicite:2]{index=2}
     }
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
+

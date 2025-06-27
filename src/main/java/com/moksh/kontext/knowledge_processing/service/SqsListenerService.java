@@ -5,13 +5,10 @@ import com.moksh.kontext.knowledge_processing.config.KnowledgeProcessingConfig;
 import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessEvent;
 import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessFailedEvent;
 import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessSuccessEvent;
+import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.*;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -27,42 +24,21 @@ import java.util.List;
 @Slf4j
 public class SqsListenerService {
 
-    private final SqsClient sqsClient;
     private final S3Client s3Client;
-    private final KnowledgeProcessingConfig knowledgeProcessingConfig;
     private final ObjectMapper objectMapper;
     private final ContentProcessingStatusService contentProcessingStatusService;
 
-    @Scheduled(fixedDelay = 5000)
-    @Async
-    public void pollContentProcessingStatusMessages() {
+    @SqsListener(value = "${aws.sqs.processing-queue-name}", pollTimeoutSeconds = "20")
+    public void receiveMessage(String messageBody) {
         try {
-            ReceiveMessageRequest request = ReceiveMessageRequest.builder()
-                    .queueUrl(knowledgeProcessingConfig.getProcessingQueueUrl())
-                    .maxNumberOfMessages(10)
-                    .waitTimeSeconds(20)
-                    .build();
-
-            ReceiveMessageResponse response = sqsClient.receiveMessage(request);
-            List<Message> messages = response.messages();
-
-            for (Message message : messages) {
-                try {
-                    processStatusMessage(message);
-                    deleteMessage(message);
-                } catch (Exception e) {
-                    log.error("Failed to process status message: {}, Error: {}", 
-                            message.messageId(), e.getMessage(), e);
-                    handleFailedMessage(message, e);
-                }
-            }
-        } catch (SqsException e) {
-            log.error("Failed to poll messages from status queue: {}", e.getMessage(), e);
+            processStatusMessage(messageBody);
+        } catch (Exception e) {
+            log.error("Failed to process status message: {}", e.getMessage(), e);
+            throw new RuntimeException("Message processing failed", e);
         }
     }
 
-    private void processStatusMessage(Message message) throws Exception {
-        String messageBody = message.body();
+    private void processStatusMessage(String messageBody) throws Exception {
         ContentProcessEvent event = objectMapper.readValue(messageBody, ContentProcessEvent.class);
         
         // Add null safety checks
@@ -126,19 +102,6 @@ public class SqsListenerService {
         );
     }
 
-    private void deleteMessage(Message message) {
-        try {
-            DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
-                    .queueUrl(knowledgeProcessingConfig.getProcessingQueueUrl())
-                    .receiptHandle(message.receiptHandle())
-                    .build();
-
-            sqsClient.deleteMessage(deleteRequest);
-            log.debug("Successfully deleted message: {}", message.messageId());
-        } catch (SqsException e) {
-            log.error("Failed to delete message: {}, Error: {}", message.messageId(), e.getMessage(), e);
-        }
-    }
 
     private List<Document> fetchDocumentsFromS3(String bucketName, String s3Key) {
         try {
@@ -172,19 +135,4 @@ public class SqsListenerService {
         }
     }
 
-    private void handleFailedMessage(Message message, Exception e) {
-        try {
-            String receiveCount = message.attributes().get("ApproximateReceiveCount");
-            int count = receiveCount != null ? Integer.parseInt(receiveCount) : 0;
-            
-            if (count >= 3) {
-                log.error("Message {} has exceeded max retry attempts ({}), it will be sent to DLQ", 
-                        message.messageId(), count);
-            } else {
-                log.info("Message {} will be retried (attempt {})", message.messageId(), count + 1);
-            }
-        } catch (Exception ex) {
-            log.error("Failed to handle failed message: {}", message.messageId(), ex);
-        }
-    }
 }
