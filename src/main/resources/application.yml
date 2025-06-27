@@ -93,7 +93,7 @@ spring:
 
 # JWT Configuration (Common)
 jwt:
-  secret: ${JWT_SECRET:dev-jwt-secret-key-must-be-at-least-32-characters-long-for-security}
+  secret: ${JWT_SECRET}
   access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:900000}   # 15 minutes
   refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:604800000}  # 7 days
 
@@ -110,15 +110,18 @@ server:
 
 # AWS Configuration (Common)
 aws:
-  access-key-id: ${AWS_ACCESS_KEY_ID:your-aws-access-key-id}
-  secret-access-key: ${AWS_SECRET_ACCESS_KEY:your-aws-secret-access-key}
-  region: ${AWS_REGION:us-east-1}
+  access-key-id: ${AWS_ACCESS_KEY_ID}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+  region: ${AWS_REGION}
   s3:
-    bucket-name: ${AWS_S3_BUCKET_NAME:kontext-dev-bucket}
+    bucket-name: ${AWS_S3_BUCKET_NAME}
   cloudfront:
-    url: ${AWS_CLOUDFRONT_URL:https://your-cloudfront-domain.cloudfront.net}
+    url: ${AWS_CLOUDFRONT_URL}
+  sqs:
+    process-queue-url: ${AWS_SQS_PROCESS_QUEUE_URL}
+    processing-queue-url: ${AWS_SQS_PROCESSING_QUEUE_URL}
 
 # Google OAuth2 Configuration (Common)
 google:
   oauth2:
-    client-id: ${GOOGLE_OAUTH2_CLIENT_ID:your-google-client-id}
+    client-id: ${GOOGLE_OAUTH2_CLIENT_ID}

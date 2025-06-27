@@ -2,6 +2,8 @@ package com.moksh.kontext.knowledge.service;
 
 import com.moksh.kontext.ai.service.VectorService;
 import com.moksh.kontext.aws.service.S3Service;
+import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessRequestEvent;
+import com.moksh.kontext.knowledge_processing.service.SqsMessageService;
 import com.moksh.kontext.common.exception.ResourceNotFoundException;
 import com.moksh.kontext.common.util.SecurityContextUtil;
 import com.moksh.kontext.knowledge.dto.CreateKnowledgeDto;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,6 +49,9 @@ public class KnowledgeService {
     private S3Service s3Service;
     @Autowired
     private VectorService vectorService;
+
+    @Autowired
+    private SqsMessageService sqsMessageService;
 
     public KnowledgeDto uploadFileKnowledge(UUID projectId, MultipartFile file) {
         UUID currentUserId = SecurityContextUtil.getCurrentUserId();
@@ -73,11 +79,24 @@ public class KnowledgeService {
         
         Knowledge savedKnowledge = knowledgeRepository.save(knowledge);
 
-        // create dummy documents for vectorstore
-        List<Document> documents = createDummyDocuments(savedKnowledge.getId());
+        // Send content processing request to SQS for async processing
+        ContentProcessRequestEvent event = ContentProcessRequestEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("content.process.request")
+                .timestamp(LocalDateTime.now())
+                .contentId(savedKnowledge.getId().toString())
+                .contentType("document")
+                .fileName(fileName)
+                .s3Key(extractS3Key(s3Url))
+                .s3Bucket(extractS3Bucket(s3Url))
+                .mimeType(contentType)
+                .fileSize(file.getSize())
+                .projectId(projectId)
+                .userId(currentUserId)
+                .build();
 
-        vectorService.addDocuments(documents);
-        log.info("File knowledge created: {} for project: {}", fileName, projectId);
+        sqsMessageService.sendContentProcessingRequest(event);
+        log.info("File knowledge created and processing request sent to SQS: {} for project: {}", fileName, projectId);
         
         return knowledgeMapper.toDto(savedKnowledge);
     }
@@ -328,6 +347,25 @@ public class KnowledgeService {
                         )
                 )
         );
+    }
+
+    private String extractS3Key(String s3Url) {
+        // Extract key from S3 URL format: https://bucket.s3.region.amazonaws.com/key
+        // or https://s3.region.amazonaws.com/bucket/key
+        try {
+            URL url = new URL(s3Url);
+            String path = url.getPath();
+            return path.startsWith("/") ? path.substring(1) : path;
+        } catch (Exception e) {
+            log.warn("Failed to extract S3 key from URL: {}", s3Url, e);
+            return s3Url;
+        }
+    }
+
+    private String extractS3Bucket(String s3Url) {
+        // For simplicity, return a default bucket name
+        // In production, this should be extracted from the S3 URL or configuration
+        return "kontext-documents"; // This should match your S3 bucket configuration
     }
 
 }
