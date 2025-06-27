@@ -65,10 +65,20 @@ public class SqsListenerService {
         String messageBody = message.body();
         ContentProcessEvent event = objectMapper.readValue(messageBody, ContentProcessEvent.class);
         
+        // Add null safety checks
+        String eventType = event.getEventType();
+        String contentId = event.getContentId();
+        String contentType = event.getContentType();
+        
         log.info("Received content processing event: {}, ContentId: {}, ContentType: {}", 
-                event.getEventType(), event.getContentId(), event.getContentType());
+                eventType, contentId, contentType);
 
-        switch (event.getEventType()) {
+        if (eventType == null) {
+            log.error("Event type is null in message: {}", messageBody);
+            throw new IllegalArgumentException("Event type cannot be null");
+        }
+
+        switch (eventType) {
             case "content.process.success":
                 handleProcessingSuccess((ContentProcessSuccessEvent) event);
                 break;
@@ -76,7 +86,7 @@ public class SqsListenerService {
                 handleProcessingFailure((ContentProcessFailedEvent) event);
                 break;
             default:
-                log.warn("Unexpected event type received on response queue: {}", event.getEventType());
+                log.warn("Unexpected event type received on response queue: {}", eventType);
         }
     }
 

@@ -11,7 +11,12 @@ import java.time.LocalDateTime;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "eventType")
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME, 
+    property = "eventType",
+    defaultImpl = ContentProcessRequestEvent.class,
+    visible = true
+)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = ContentProcessRequestEvent.class, name = "content.process.request"),
     @JsonSubTypes.Type(value = ContentProcessSuccessEvent.class, name = "content.process.success"),
