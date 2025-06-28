@@ -36,6 +36,14 @@ spring:
       write-dates-as-timestamps: false
       indent-output: false
     time-zone: UTC
+  
+  # Multipart File Upload Configuration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB
 
   
   # Thread Pool Configuration

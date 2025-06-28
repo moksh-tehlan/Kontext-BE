@@ -13,7 +13,7 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class ContentProcessRequestEvent extends ContentProcessEvent {
     
-    private String fileName;
+    private String name;
     private String s3Key;
     private String s3Bucket;
     private String mimeType;

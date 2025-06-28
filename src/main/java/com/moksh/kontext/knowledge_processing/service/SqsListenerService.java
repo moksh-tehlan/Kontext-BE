@@ -2,6 +2,7 @@ package com.moksh.kontext.knowledge_processing.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moksh.kontext.knowledge_processing.config.KnowledgeProcessingConfig;
+import com.moksh.kontext.knowledge_processing.constants.EventType;
 import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessEvent;
 import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessFailedEvent;
 import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessSuccessEvent;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -55,10 +57,10 @@ public class SqsListenerService {
         }
 
         switch (eventType) {
-            case "content.process.success":
+            case EventType.CONTENT_PROCESS_SUCCESS:
                 handleProcessingSuccess((ContentProcessSuccessEvent) event);
                 break;
-            case "content.process.failed":
+            case EventType.CONTENT_PROCESS_FAILED:
                 handleProcessingFailure((ContentProcessFailedEvent) event);
                 break;
             default:
@@ -74,6 +76,9 @@ public class SqsListenerService {
             // Fetch documents from S3
             List<Document> documents = fetchDocumentsFromS3(event.getS3BucketName(), event.getS3Key());
             event.setDocuments(documents);
+            
+            // Delete the document from S3 after successful fetch
+            deleteDocumentFromS3(event.getS3BucketName(), event.getS3Key());
             
             contentProcessingStatusService.markProcessingComplete(
                     event.getContentId(),
@@ -132,6 +137,29 @@ public class SqsListenerService {
             log.error("Error parsing documents from S3 JSON - Bucket: {}, Key: {}, Error: {}", 
                     bucketName, s3Key, e.getMessage(), e);
             throw new RuntimeException("Failed to parse documents from S3 JSON", e);
+        }
+    }
+
+    private void deleteDocumentFromS3(String bucketName, String s3Key) {
+        try {
+            log.debug("Deleting document from S3 - Bucket: {}, Key: {}", bucketName, s3Key);
+            
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Key)
+                    .build();
+            
+            s3Client.deleteObject(deleteObjectRequest);
+            
+            log.info("Successfully deleted document from S3 - Bucket: {}, Key: {}", bucketName, s3Key);
+        } catch (S3Exception e) {
+            log.error("S3 error while deleting document - Bucket: {}, Key: {}, Error: {}", 
+                    bucketName, s3Key, e.getMessage(), e);
+            throw new RuntimeException("Failed to delete document from S3", e);
+        } catch (Exception e) {
+            log.error("Error deleting document from S3 - Bucket: {}, Key: {}, Error: {}", 
+                    bucketName, s3Key, e.getMessage(), e);
+            throw new RuntimeException("Failed to delete document from S3", e);
         }
     }
 

@@ -21,4 +21,6 @@ public class KnowledgeDto extends BaseDto {
     private Long size;
     private String source;
     private UUID projectId;
+    private Knowledge.ProcessingStatus processingStatus;
+    private String errorDetails;
 }

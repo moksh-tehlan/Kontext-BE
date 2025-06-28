@@ -2,6 +2,7 @@ package com.moksh.kontext.knowledge.service;
 
 import com.moksh.kontext.ai.service.VectorService;
 import com.moksh.kontext.aws.service.S3Service;
+import com.moksh.kontext.knowledge_processing.constants.EventType;
 import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessRequestEvent;
 import com.moksh.kontext.knowledge_processing.service.SqsMessageService;
 import com.moksh.kontext.common.exception.ResourceNotFoundException;
@@ -76,17 +77,18 @@ public class KnowledgeService {
         knowledge.setSize(file.getSize());
         knowledge.setSource(s3Url);
         knowledge.setProject(project);
+        knowledge.setProcessingStatus(Knowledge.ProcessingStatus.PROCESSING);
         
         Knowledge savedKnowledge = knowledgeRepository.save(knowledge);
 
         // Send content processing request to SQS for async processing
         ContentProcessRequestEvent event = ContentProcessRequestEvent.builder()
                 .eventId(UUID.randomUUID().toString())
-                .eventType("content.process.request")
+                .eventType(EventType.CONTENT_PROCESS_REQUEST)
                 .timestamp(LocalDateTime.now())
                 .contentId(savedKnowledge.getId().toString())
-                .contentType("document")
-                .fileName(fileName)
+                .contentType(EventType.CONTENT_TYPE_DOCUMENT)
+                .name(fileName)
                 .s3Key(extractS3Key(s3Url))
                 .s3Bucket(extractS3Bucket(s3Url))
                 .mimeType(contentType)
@@ -117,8 +119,27 @@ public class KnowledgeService {
         knowledge.setSize(null);
         knowledge.setSource(createKnowledgeDto.getWebUrl());
         knowledge.setProject(project);
+        knowledge.setProcessingStatus(Knowledge.ProcessingStatus.PROCESSING);
         
         Knowledge savedKnowledge = knowledgeRepository.save(knowledge);
+
+        ContentProcessRequestEvent event = ContentProcessRequestEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType(EventType.CONTENT_PROCESS_REQUEST)
+                .timestamp(LocalDateTime.now())
+                .contentId(savedKnowledge.getId().toString())
+                .contentType(EventType.CONTENT_TYPE_WEB)
+                .name(urlName)
+                .mimeType("text/html")
+                .fileSize(null)
+                .s3Bucket(null)
+                .s3Key(null)
+                .webUrl(savedKnowledge.getSource())
+                .projectId(projectId)
+                .userId(currentUserId)
+                .build();
+
+        sqsMessageService.sendContentProcessingRequest(event);
         log.info("Web knowledge created: {} for project: {}", urlName, projectId);
         
         return knowledgeMapper.toDto(savedKnowledge);
@@ -365,7 +386,33 @@ public class KnowledgeService {
     private String extractS3Bucket(String s3Url) {
         // For simplicity, return a default bucket name
         // In production, this should be extracted from the S3 URL or configuration
-        return "kontext-documents"; // This should match your S3 bucket configuration
+        return "kontext-dev-bucket"; // This should match your S3 bucket configuration
+    }
+
+    public void updateProcessingStatus(UUID knowledgeId, Knowledge.ProcessingStatus status) {
+        Knowledge knowledge = knowledgeRepository.findById(knowledgeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Knowledge not found"));
+        
+        knowledge.setProcessingStatus(status);
+        knowledge.setErrorDetails(null);
+        knowledgeRepository.save(knowledge);
+        
+        log.info("Knowledge processing status updated to {} for ID: {}", status, knowledgeId);
+    }
+
+    public void markProcessingSuccess(UUID knowledgeId) {
+        updateProcessingStatus(knowledgeId, Knowledge.ProcessingStatus.SUCCESS);
+    }
+
+    public void markProcessingFailed(UUID knowledgeId, String errorDetails) {
+        Knowledge knowledge = knowledgeRepository.findById(knowledgeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Knowledge not found"));
+        
+        knowledge.setProcessingStatus(Knowledge.ProcessingStatus.FAILED);
+        knowledge.setErrorDetails(errorDetails);
+        knowledgeRepository.save(knowledge);
+        
+        log.error("Knowledge processing failed for ID: {} with error: {}", knowledgeId, errorDetails);
     }
 
 }

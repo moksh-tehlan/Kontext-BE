@@ -3,9 +3,13 @@ package com.moksh.kontext.chat.controller;
 import com.moksh.kontext.chat.dto.ChatRequest;
 import com.moksh.kontext.ai.service.RagChatService;
 import com.moksh.kontext.chat.dto.ChatDto;
+import com.moksh.kontext.chat.dto.ChatMessageDto;
 import com.moksh.kontext.chat.dto.CreateChatDto;
 import com.moksh.kontext.chat.dto.UpdateChatDto;
+import com.moksh.kontext.chat.entity.ChatMessage;
+import com.moksh.kontext.chat.mapper.ChatMapper;
 import com.moksh.kontext.chat.service.ChatService;
+import com.moksh.kontext.chat.service.ChatMessageService;
 import com.moksh.kontext.common.response.ApiResponse;
 import com.moksh.kontext.common.response.PageResponse;
 import jakarta.validation.Valid;
@@ -26,6 +30,8 @@ import java.util.UUID;
 public class ChatController {
 
     private final ChatService chatService;
+    private final ChatMessageService chatMessageService;
+    private final ChatMapper chatMapper;
     private final RagChatService ragChatService;
 
     @PostMapping
@@ -91,6 +97,30 @@ public class ChatController {
         PageResponse<ChatDto> pageResponse = PageResponse.of(chats);
         
         return ApiResponse.success(pageResponse, "Chats searched successfully");
+    }
+
+    @GetMapping("/{id}/history")
+    public ApiResponse<List<ChatMessageDto>> getChatHistory(@PathVariable UUID id) {
+        log.debug("GET /chats/{}/history - Fetching chat history", id);
+        
+        List<ChatMessage> messages = chatMessageService.getChatMessages(id);
+        List<ChatMessageDto> messageDtos = messages.stream()
+                .map(chatMapper::toDto)
+                .toList();
+        return ApiResponse.success(messageDtos, "Chat history retrieved successfully");
+    }
+
+    @GetMapping("/{id}/history/paginated")
+    public ApiResponse<PageResponse<ChatMessageDto>> getChatHistoryPaginated(
+            @PathVariable UUID id,
+            @PageableDefault(size = 20) Pageable pageable) {
+        log.debug("GET /chats/{}/history/paginated - Fetching chat history paginated", id);
+        
+        Page<ChatMessage> messages = chatMessageService.getChatMessages(id, pageable);
+        Page<ChatMessageDto> messageDtos = messages.map(chatMapper::toDto);
+        PageResponse<ChatMessageDto> pageResponse = PageResponse.of(messageDtos);
+        
+        return ApiResponse.success(pageResponse, "Chat history retrieved successfully");
     }
 
     @PostMapping("{id}/chat")

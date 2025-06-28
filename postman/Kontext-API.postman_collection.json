@@ -2124,6 +2124,105 @@
 					"response": []
 				},
 				{
+					"name": "Get Chat History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Chat history retrieved successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Chat history retrieved successfully\");",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chats/{{chat_id}}/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chats",
+								"{{chat_id}}",
+								"history"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Chat History (Paginated)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Chat history retrieved successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Chat history retrieved successfully\");",
+									"    pm.expect(responseJson.data).to.have.property('content');",
+									"    pm.expect(responseJson.data.content).to.be.an('array');",
+									"    pm.expect(responseJson.data).to.have.property('totalElements');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chats/{{chat_id}}/history/paginated?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chats",
+								"{{chat_id}}",
+								"history",
+								"paginated"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Chat with AI (RAG)",
 					"event": [
 						{

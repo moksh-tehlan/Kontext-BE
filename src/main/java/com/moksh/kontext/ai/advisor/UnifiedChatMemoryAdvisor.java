@@ -9,6 +9,7 @@ import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import com.moksh.kontext.chat.service.ChatMessageService;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -189,7 +190,7 @@ public class UnifiedChatMemoryAdvisor implements BaseAdvisor {
                 
                 if (!isDuplicate && isRelevantToQuery(content, userQuery)) {
                     // Add semantic context as system context
-                    unifiedMemory.add(new org.springframework.ai.chat.messages.SystemMessage(
+                    unifiedMemory.add(new SystemMessage(
                         "Previous relevant context: " + content));
                 }
             }

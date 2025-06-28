@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -182,6 +183,24 @@ public class GlobalExceptionHandler {
         );
         
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    // File Upload Exceptions
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        log.warn("File size exceeded: {}", ex.getMessage());
+        
+        String message = "File size exceeds the maximum allowed limit of 50MB";
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                message,
+                "FILE_SIZE_EXCEEDED",
+                request.getRequestURI(),
+                HttpStatus.BAD_REQUEST.value()
+        );
+        
+        return ResponseEntity.badRequest().body(response);
     }
 
     // Knowledge Management Exceptions

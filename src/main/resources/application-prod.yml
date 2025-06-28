@@ -98,8 +98,8 @@ server:
     threads:
       max: 200
       min-spare: 10
-    max-swallow-size: 2MB
-    max-http-form-post-size: 2MB
+    max-swallow-size: 50MB
+    max-http-form-post-size: 50MB
   servlet:
     session:
       cookie:

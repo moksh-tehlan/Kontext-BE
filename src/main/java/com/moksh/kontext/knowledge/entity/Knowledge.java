@@ -45,9 +45,24 @@ public class Knowledge extends BaseEntity {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
+    @NotNull(message = "Processing status is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "processing_status", nullable = false)
+    private ProcessingStatus processingStatus = ProcessingStatus.PROCESSING;
+
+    @Size(max = 1000, message = "Error details must not exceed 1000 characters")
+    @Column(name = "error_details", length = 1000)
+    private String errorDetails;
+
     public enum KnowledgeType {
         IMAGE,
         DOCUMENT,
         WEB
+    }
+
+    public enum ProcessingStatus {
+        PROCESSING,
+        SUCCESS,
+        FAILED
     }
 }
