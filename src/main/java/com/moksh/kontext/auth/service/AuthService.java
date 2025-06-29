@@ -248,6 +248,7 @@ public class AuthService {
             
             newUser.setFirstName(firstName);
             newUser.setLastName(lastName);
+            newUser.setNickname(firstName);
             
             // Set required fields
             newUser.setAuthProvider(User.AuthProvider.EMAIL_OTP);

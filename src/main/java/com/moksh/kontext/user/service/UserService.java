@@ -1,7 +1,8 @@
 package com.moksh.kontext.user.service;
 
-import com.moksh.kontext.common.exception.BusinessException;
-import com.moksh.kontext.common.exception.ResourceNotFoundException;
+import com.moksh.kontext.user.exception.UserNotFoundException;
+import com.moksh.kontext.user.exception.DuplicateEmailException;
+import com.moksh.kontext.user.exception.InvalidProfileDataException;
 import com.moksh.kontext.user.dto.CreateUserDto;
 import com.moksh.kontext.user.dto.UpdateUserDto;
 import com.moksh.kontext.user.dto.UserDto;
@@ -38,7 +39,7 @@ public class UserService {
         log.debug("Fetching user by id: {}", id);
         User user = userRepository.findById(id)
                 .filter(User::getIsActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> UserNotFoundException.forId(id.toString()));
         return userMapper.toDto(user);
     }
 
@@ -48,7 +49,7 @@ public class UserService {
         log.debug("Fetching user by email: {}", email);
         User user = userRepository.findByEmail(email)
                 .filter(User::getIsActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> UserNotFoundException.forEmail(email));
         return userMapper.toDto(user);
     }
 
@@ -70,7 +71,7 @@ public class UserService {
         
         User existingUser = userRepository.findById(id)
                 .filter(User::getIsActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> UserNotFoundException.forId(id.toString()));
         
         validateUserUpdate(updateUserDto, existingUser);
         
@@ -86,7 +87,7 @@ public class UserService {
         
         User user = userRepository.findById(id)
                 .filter(User::getIsActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> UserNotFoundException.forId(id.toString()));
         
         user.setIsActive(false);
         userRepository.save(user);
@@ -119,7 +120,7 @@ public class UserService {
         log.debug("Fetching user by Google ID: {}", googleId);
         User user = userRepository.findByGoogleId(googleId)
                 .filter(User::getIsActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with Google ID: " + googleId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with Google ID: " + googleId));
         return userMapper.toDto(user);
     }
 
@@ -128,7 +129,7 @@ public class UserService {
         
         User user = userRepository.findById(userId)
                 .filter(User::getIsActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> UserNotFoundException.forId(userId.toString()));
         
         user.setIsEmailVerified(true);
         User updatedUser = userRepository.save(user);
@@ -156,7 +157,7 @@ public class UserService {
         
         User user = userRepository.findById(id)
                 .filter(User::getIsActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> UserNotFoundException.forId(id.toString()));
         
         user.setRole(role);
         User updatedUser = userRepository.save(user);
@@ -167,19 +168,19 @@ public class UserService {
 
     private void validateUserCreation(CreateUserDto createUserDto) {
         if (userRepository.existsByEmail(createUserDto.getEmail())) {
-            throw new BusinessException("Email already exists: " + createUserDto.getEmail());
+            throw DuplicateEmailException.forEmail(createUserDto.getEmail());
         }
         
         // Validate Google ID if provided for Google auth
         if (User.AuthProvider.GOOGLE.equals(createUserDto.getAuthProvider()) && createUserDto.getGoogleId() != null) {
             if (userRepository.existsByGoogleId(createUserDto.getGoogleId())) {
-                throw new BusinessException("Google account already exists: " + createUserDto.getGoogleId());
+                throw new InvalidProfileDataException("Google account already exists: " + createUserDto.getGoogleId());
             }
         }
         
         // Validate that Google ID is provided for Google auth
         if (User.AuthProvider.GOOGLE.equals(createUserDto.getAuthProvider()) && createUserDto.getGoogleId() == null) {
-            throw new BusinessException("Google ID is required for Google authentication");
+            throw InvalidProfileDataException.forField("googleId - required for Google authentication");
         }
     }
 
@@ -187,7 +188,7 @@ public class UserService {
         if (updateUserDto.getEmail() != null && 
             !updateUserDto.getEmail().equals(existingUser.getEmail()) &&
             userRepository.existsByEmail(updateUserDto.getEmail())) {
-            throw new BusinessException("Email already exists: " + updateUserDto.getEmail());
+            throw DuplicateEmailException.forEmail(updateUserDto.getEmail());
         }
     }
 }

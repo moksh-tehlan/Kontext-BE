@@ -1,6 +1,7 @@
 package com.moksh.kontext.common.exception;
 
 import com.moksh.kontext.auth.exception.*;
+import com.moksh.kontext.user.exception.*;
 import com.moksh.kontext.common.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -171,6 +172,82 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleAuthorizationFailedException(
             AuthorizationFailedException ex, HttpServletRequest request) {
         log.warn("Authorization failed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    // User-specific Exception Handlers
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserNotFoundException(
+            UserNotFoundException ex, HttpServletRequest request) {
+        log.warn("User not found: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDuplicateEmailException(
+            DuplicateEmailException ex, HttpServletRequest request) {
+        log.warn("Duplicate email: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(InvalidProfileDataException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidProfileDataException(
+            InvalidProfileDataException ex, HttpServletRequest request) {
+        log.warn("Invalid profile data: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(ProfileUpdateFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleProfileUpdateFailedException(
+            ProfileUpdateFailedException ex, HttpServletRequest request) {
+        log.warn("Profile update failed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(InsufficientPermissionsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInsufficientPermissionsException(
+            InsufficientPermissionsException ex, HttpServletRequest request) {
+        log.warn("Insufficient permissions: {}", ex.getMessage());
         
         ApiResponse<Object> response = ApiResponse.error(
                 ex.getMessage(),
