@@ -4,6 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.moksh.kontext.auth.exception.GoogleTokenVerificationException;
 import com.moksh.kontext.common.exception.BusinessException;
 import com.moksh.kontext.google.config.GoogleConfig;
 import com.moksh.kontext.google.dto.GoogleUserInfo;
@@ -56,11 +57,11 @@ public class GoogleService {
                         .build();
             } else {
                 log.error("Invalid Google ID token");
-                throw new BusinessException("Invalid Google ID token");
+                throw new GoogleTokenVerificationException();
             }
         } catch (GeneralSecurityException | IOException e) {
             log.error("Error verifying Google ID token", e);
-            throw new BusinessException("Failed to verify Google ID token: " + e.getMessage());
+            throw new GoogleTokenVerificationException("Failed to verify Google ID token", e);
         }
     }
 }

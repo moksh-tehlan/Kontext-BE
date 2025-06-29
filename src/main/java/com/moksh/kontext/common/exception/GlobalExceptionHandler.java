@@ -1,5 +1,6 @@
 package com.moksh.kontext.common.exception;
 
+import com.moksh.kontext.auth.exception.*;
 import com.moksh.kontext.common.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -32,11 +33,150 @@ public class GlobalExceptionHandler {
             BusinessException ex, HttpServletRequest request) {
         log.warn("Business exception: {}", ex.getMessage());
         
+        // Use custom status code if available, otherwise fall back to HTTP status
+        int statusCode = ex.getCustomStatusCode() != null ? ex.getCustomStatusCode() : ex.getHttpStatus().value();
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                statusCode
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    // Auth-specific Exception Handlers
+    @ExceptionHandler(OtpDoesntMatchException.class)
+    public ResponseEntity<ApiResponse<Object>> handleOtpDoesntMatchException(
+            OtpDoesntMatchException ex, HttpServletRequest request) {
+        log.warn("OTP mismatch: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(OtpExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>> handleOtpExpiredException(
+            OtpExpiredException ex, HttpServletRequest request) {
+        log.warn("OTP expired: {}", ex.getMessage());
+        
         ApiResponse<Object> response = ApiResponse.error(
                 ex.getMessage(),
                 ex.getErrorCode(),
                 request.getRequestURI(),
                 ex.getHttpStatus().value()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(OtpNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleOtpNotFoundException(
+            OtpNotFoundException ex, HttpServletRequest request) {
+        log.warn("OTP not found: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(UserAccountDeactivatedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserAccountDeactivatedException(
+            UserAccountDeactivatedException ex, HttpServletRequest request) {
+        log.warn("User account deactivated: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getHttpStatus().value()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidRefreshTokenException(
+            InvalidRefreshTokenException ex, HttpServletRequest request) {
+        log.warn("Invalid refresh token: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getHttpStatus().value()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(GoogleTokenVerificationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleGoogleTokenVerificationException(
+            GoogleTokenVerificationException ex, HttpServletRequest request) {
+        log.warn("Google token verification failed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getHttpStatus().value()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(UserCreationFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserCreationFailedException(
+            UserCreationFailedException ex, HttpServletRequest request) {
+        log.error("User creation failed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAuthenticationFailedException(
+            AuthenticationFailedException ex, HttpServletRequest request) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(AuthorizationFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAuthorizationFailedException(
+            AuthorizationFailedException ex, HttpServletRequest request) {
+        log.warn("Authorization failed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
         );
         
         return ResponseEntity.status(ex.getHttpStatus()).body(response);

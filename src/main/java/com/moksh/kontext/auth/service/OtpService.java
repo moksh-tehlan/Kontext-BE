@@ -1,5 +1,8 @@
 package com.moksh.kontext.auth.service;
 
+import com.moksh.kontext.auth.exception.OtpDoesntMatchException;
+import com.moksh.kontext.auth.exception.OtpExpiredException;
+import com.moksh.kontext.auth.exception.OtpNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -32,31 +35,28 @@ public class OtpService {
         sendOtpEmail(email, otp);
     }
 
-    public boolean verifyOtp(String email, String providedOtp) {
+    public void verifyOtp(String email, String providedOtp) {
         OtpData otpData = otpStore.get(email);
         
         if (otpData == null) {
             log.debug("No OTP found for email: {}", email);
-            return false;
+            throw OtpNotFoundException.forEmail(email);
         }
         
         if (LocalDateTime.now().isAfter(otpData.expiryTime)) {
             log.debug("OTP expired for email: {}", email);
             otpStore.remove(email);
-            return false;
+            throw new OtpExpiredException();
         }
         
-        boolean isValid = otpData.otp.equals(providedOtp);
-        
-        if (isValid) {
-            // Remove OTP after successful verification
-            otpStore.remove(email);
-            log.info("OTP verified successfully for email: {}", email);
-        } else {
+        if (!otpData.otp.equals(providedOtp)) {
             log.debug("Invalid OTP provided for email: {}", email);
+            throw new OtpDoesntMatchException();
         }
         
-        return isValid;
+        // Remove OTP after successful verification
+        otpStore.remove(email);
+        log.info("OTP verified successfully for email: {}", email);
     }
 
     private String generateOtp() {

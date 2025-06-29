@@ -1,6 +1,7 @@
 package com.moksh.kontext.auth.service;
 
 import com.moksh.kontext.auth.dto.*;
+import com.moksh.kontext.auth.exception.*;
 import com.moksh.kontext.auth.service.TokenRedisService;
 import com.moksh.kontext.auth.util.JwtUtil;
 import com.moksh.kontext.common.exception.BusinessException;
@@ -54,9 +55,7 @@ public class AuthService {
         log.debug("Attempting OTP login for email: {}", request.getEmail());
         
         // Verify OTP
-        if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
-            throw new BusinessException("Invalid or expired OTP");
-        }
+        otpService.verifyOtp(request.getEmail(), request.getOtp());
         
         // Find or create user by email
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
@@ -68,7 +67,7 @@ public class AuthService {
             
             // Check if user is active
             if (!user.getIsActive()) {
-                throw new BusinessException("User account is deactivated");
+                throw new UserAccountDeactivatedException();
             }
         } else {
             // Create new user if doesn't exist
@@ -127,7 +126,7 @@ public class AuthService {
             
             // Check if user is active
             if (!user.getIsActive()) {
-                throw new BusinessException("User account is deactivated");
+                throw new UserAccountDeactivatedException();
             }
             
             // Update Google ID if not set
@@ -190,7 +189,7 @@ public class AuthService {
         
         // Validate refresh token
         if (!jwtUtil.isTokenValid(refreshToken) || !jwtUtil.isRefreshToken(refreshToken) || !tokenRedisService.isRefreshTokenValid(refreshToken)) {
-            throw new BusinessException("Invalid refresh token");
+            throw new InvalidRefreshTokenException();
         }
         
         // Get user from refresh token
@@ -200,7 +199,7 @@ public class AuthService {
         
         // Check if user is still active
         if (!user.getIsActive()) {
-            throw new BusinessException("User account is deactivated");
+            throw new UserAccountDeactivatedException();
         }
         
         // Revoke all existing access tokens for this user (security: invalidate old access tokens)
@@ -264,7 +263,7 @@ public class AuthService {
             
         } catch (Exception e) {
             log.error("Error creating new user with email: {}", email, e);
-            throw new BusinessException("Failed to create user account: " + e.getMessage());
+            throw new UserCreationFailedException("Failed to create user account", e);
         }
     }
 
@@ -307,7 +306,7 @@ public class AuthService {
             
         } catch (Exception e) {
             log.error("Error creating new Google user with email: {}", googleUserInfo.getEmail(), e);
-            throw new BusinessException("Failed to create user account: " + e.getMessage());
+            throw new UserCreationFailedException("Failed to create Google user account", e);
         }
     }
 
