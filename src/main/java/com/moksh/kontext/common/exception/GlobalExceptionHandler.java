@@ -183,6 +183,96 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getHttpStatus()).body(response);
     }
 
+    @ExceptionHandler(JwtTokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtTokenExpiredException(
+            JwtTokenExpiredException ex, HttpServletRequest request) {
+        log.warn("JWT token expired: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(JwtTokenMalformedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtTokenMalformedException(
+            JwtTokenMalformedException ex, HttpServletRequest request) {
+        log.warn("JWT token malformed: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(JwtTokenMissingException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtTokenMissingException(
+            JwtTokenMissingException ex, HttpServletRequest request) {
+        log.warn("JWT token missing: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(JwtSignatureInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtSignatureInvalidException(
+            JwtSignatureInvalidException ex, HttpServletRequest request) {
+        log.warn("JWT signature invalid: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(AccessTokenInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessTokenInvalidException(
+            AccessTokenInvalidException ex, HttpServletRequest request) {
+        log.warn("Access token invalid: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(TokenBlacklistedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleTokenBlacklistedException(
+            TokenBlacklistedException ex, HttpServletRequest request) {
+        log.warn("Token blacklisted: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                request.getRequestURI(),
+                ex.getCustomStatusCode()
+        );
+        
+        return ResponseEntity.status(ex.getHttpStatus()).body(response);
+    }
+
     // User-specific Exception Handlers
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserNotFoundException(

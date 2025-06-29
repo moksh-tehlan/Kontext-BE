@@ -27,6 +27,12 @@ public class AuthError extends BaseAppError {
     // Token Related Errors (4300-4399)
     public static final AuthError INVALID_REFRESH_TOKEN = new AuthError("AUTH_INVALID_REFRESH_TOKEN", 4301, "Invalid or expired refresh token. Please login again");
     public static final AuthError GOOGLE_TOKEN_INVALID = new AuthError("AUTH_GOOGLE_TOKEN_INVALID", 4302, "Failed to verify Google ID token. Please try again");
+    public static final AuthError JWT_TOKEN_EXPIRED = new AuthError("AUTH_JWT_TOKEN_EXPIRED", 4303, "JWT token has expired. Please login again");
+    public static final AuthError JWT_TOKEN_MALFORMED = new AuthError("AUTH_JWT_TOKEN_MALFORMED", 4304, "JWT token is malformed or invalid");
+    public static final AuthError JWT_TOKEN_MISSING = new AuthError("AUTH_JWT_TOKEN_MISSING", 4305, "JWT token is missing from request");
+    public static final AuthError JWT_SIGNATURE_INVALID = new AuthError("AUTH_JWT_SIGNATURE_INVALID", 4306, "JWT token signature is invalid");
+    public static final AuthError ACCESS_TOKEN_INVALID = new AuthError("AUTH_ACCESS_TOKEN_INVALID", 4307, "Invalid access token provided");
+    public static final AuthError TOKEN_BLACKLISTED = new AuthError("AUTH_TOKEN_BLACKLISTED", 4308, "Token has been blacklisted. Please login again");
     
     // General Auth Errors (4000-4099)
     public static final AuthError AUTHENTICATION_FAILED = new AuthError("AUTH_AUTHENTICATION_FAILED", 4001, "Authentication failed");
