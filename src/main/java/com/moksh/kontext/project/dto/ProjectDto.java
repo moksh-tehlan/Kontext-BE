@@ -16,5 +16,6 @@ public class ProjectDto extends BaseDto {
 
     private String name;
     private String description;
+    private String agentInstruction;
     private UUID userId;
 }

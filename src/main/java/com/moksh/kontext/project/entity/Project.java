@@ -30,6 +30,10 @@ public class Project extends BaseEntity {
     @Column(name = "description")
     private String description;
 
+    @Size(max = 2000, message = "Agent instruction must not exceed 2000 characters")
+    @Column(name = "agent_instruction")
+    private String agentInstruction;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

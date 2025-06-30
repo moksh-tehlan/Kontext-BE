@@ -19,4 +19,7 @@ public class CreateProjectDto {
 
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
+
+    @Size(max = 2000, message = "Agent instruction must not exceed 2000 characters")
+    private String agentInstruction;
 }

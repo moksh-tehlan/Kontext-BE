@@ -29,5 +29,8 @@ public class ProjectMapper {
         if (updateProjectDto.getDescription() != null) {
             project.setDescription(updateProjectDto.getDescription());
         }
+        if (updateProjectDto.getAgentInstruction() != null) {
+            project.setAgentInstruction(updateProjectDto.getAgentInstruction());
+        }
     }
 }
