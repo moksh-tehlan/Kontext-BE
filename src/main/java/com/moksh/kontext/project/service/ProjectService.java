@@ -1,14 +1,18 @@
 package com.moksh.kontext.project.service;
 
-import com.moksh.kontext.common.exception.ResourceNotFoundException;
 import com.moksh.kontext.common.util.SecurityContextUtil;
 import com.moksh.kontext.project.dto.CreateProjectDto;
 import com.moksh.kontext.project.dto.ProjectDto;
 import com.moksh.kontext.project.dto.UpdateProjectDto;
 import com.moksh.kontext.project.entity.Project;
+import com.moksh.kontext.project.exception.ProjectCreationFailedException;
+import com.moksh.kontext.project.exception.ProjectDeleteFailedException;
+import com.moksh.kontext.project.exception.ProjectNotFoundException;
+import com.moksh.kontext.project.exception.ProjectUpdateFailedException;
 import com.moksh.kontext.project.mapper.ProjectMapper;
 import com.moksh.kontext.project.repository.ProjectRepository;
 import com.moksh.kontext.user.entity.User;
+import com.moksh.kontext.user.exception.UserNotFoundException;
 import com.moksh.kontext.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -34,15 +38,22 @@ public class ProjectService {
     private ProjectMapper projectMapper;
 
     public ProjectDto createProject(CreateProjectDto createProjectDto) {
-        UUID currentUserId = SecurityContextUtil.getCurrentUserId();
-        User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        try {
+            UUID currentUserId = SecurityContextUtil.getCurrentUserId();
+            User user = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> UserNotFoundException.forId(currentUserId.toString()));
 
-        Project project = projectMapper.toEntity(createProjectDto);
-        project.setUser(user);
-        
-        Project savedProject = projectRepository.save(project);
-        return projectMapper.toDto(savedProject);
+            Project project = projectMapper.toEntity(createProjectDto);
+            project.setUser(user);
+            
+            Project savedProject = projectRepository.save(project);
+            return projectMapper.toDto(savedProject);
+        } catch (Exception e) {
+            if (e instanceof UserNotFoundException) {
+                throw e;
+            }
+            throw ProjectCreationFailedException.withReason(e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -67,29 +78,43 @@ public class ProjectService {
     public ProjectDto getProjectById(UUID projectId) {
         UUID currentUserId = SecurityContextUtil.getCurrentUserId();
         Project project = projectRepository.findByIdAndUserIdAndIsActiveTrue(projectId, currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+                .orElseThrow(() -> ProjectNotFoundException.forUserAndId(currentUserId.toString(), projectId.toString()));
         
         return projectMapper.toDto(project);
     }
 
     public ProjectDto updateProject(UUID projectId, UpdateProjectDto updateProjectDto) {
-        UUID currentUserId = SecurityContextUtil.getCurrentUserId();
-        Project project = projectRepository.findByIdAndUserIdAndIsActiveTrue(projectId, currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        try {
+            UUID currentUserId = SecurityContextUtil.getCurrentUserId();
+            Project project = projectRepository.findByIdAndUserIdAndIsActiveTrue(projectId, currentUserId)
+                    .orElseThrow(() -> ProjectNotFoundException.forUserAndId(currentUserId.toString(), projectId.toString()));
 
-        projectMapper.updateEntityFromDto(updateProjectDto, project);
-        Project updatedProject = projectRepository.save(project);
-        
-        return projectMapper.toDto(updatedProject);
+            projectMapper.updateEntityFromDto(updateProjectDto, project);
+            Project updatedProject = projectRepository.save(project);
+            
+            return projectMapper.toDto(updatedProject);
+        } catch (Exception e) {
+            if (e instanceof ProjectNotFoundException) {
+                throw e;
+            }
+            throw ProjectUpdateFailedException.withReason(projectId.toString(), e.getMessage());
+        }
     }
 
     public void deleteProject(UUID projectId) {
-        UUID currentUserId = SecurityContextUtil.getCurrentUserId();
-        Project project = projectRepository.findByIdAndUserIdAndIsActiveTrue(projectId, currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        try {
+            UUID currentUserId = SecurityContextUtil.getCurrentUserId();
+            Project project = projectRepository.findByIdAndUserIdAndIsActiveTrue(projectId, currentUserId)
+                    .orElseThrow(() -> ProjectNotFoundException.forUserAndId(currentUserId.toString(), projectId.toString()));
 
-        project.setIsActive(false);
-        projectRepository.save(project);
+            project.setIsActive(false);
+            projectRepository.save(project);
+        } catch (Exception e) {
+            if (e instanceof ProjectNotFoundException) {
+                throw e;
+            }
+            throw ProjectDeleteFailedException.withReason(projectId.toString(), e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)

@@ -191,7 +191,7 @@ public class AuthService {
         if (!jwtUtil.isTokenValid(refreshToken) || !jwtUtil.isRefreshToken(refreshToken) || !tokenRedisService.isRefreshTokenValid(refreshToken)) {
             throw new InvalidRefreshTokenException();
         }
-        
+
         // Get user from refresh token
         UUID userId = jwtUtil.getUserIdFromToken(refreshToken);
         User user = userRepository.findById(userId)
@@ -288,6 +288,7 @@ public class AuthService {
             
             newUser.setFirstName(firstName);
             newUser.setLastName(lastName);
+            newUser.setNickname(firstName);
             
             // Set Google-specific fields
             newUser.setGoogleId(googleUserInfo.getGoogleId());
