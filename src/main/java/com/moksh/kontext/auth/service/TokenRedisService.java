@@ -1,5 +1,6 @@
 package com.moksh.kontext.auth.service;
 
+import com.moksh.kontext.auth.util.JwtUtil;
 import com.moksh.kontext.redis.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import java.util.UUID;
 public class TokenRedisService {
 
     private final RedisService redisService;
+    private final JwtUtil jwtUtil;
     
     private static final String USER_TOKENS_PREFIX = "auth:user_tokens:";
     private static final String BLACKLIST_PREFIX = "auth:blacklist:";
@@ -36,11 +38,49 @@ public class TokenRedisService {
     }
 
     public boolean isAccessTokenValid(String token) {
-        return !isTokenBlacklisted(token);
+        // Token is valid only if it's not blacklisted AND exists in active tokens
+        if (isTokenBlacklisted(token)) {
+            log.debug("Access token is blacklisted");
+            return false;
+        }
+        
+        // Extract userId from token and check if token exists in user's active token set
+        try {
+            UUID userId = jwtUtil.getUserIdFromToken(token);
+            String userTokensKey = USER_TOKENS_PREFIX + userId + ":access";
+            
+            boolean tokenExists = redisService.setIsMember(userTokensKey, token);
+            if (!tokenExists) {
+                log.debug("Access token not found in user's active token set for user: {}", userId);
+            }
+            return tokenExists;
+        } catch (Exception e) {
+            log.warn("Error validating access token: {}", e.getMessage());
+            return false;
+        }
     }
 
     public boolean isRefreshTokenValid(String token) {
-        return !isTokenBlacklisted(token);
+        // Token is valid only if it's not blacklisted AND exists in active tokens
+        if (isTokenBlacklisted(token)) {
+            log.debug("Refresh token is blacklisted");
+            return false;
+        }
+        
+        // Extract userId from token and check if token exists in user's active token set
+        try {
+            UUID userId = jwtUtil.getUserIdFromToken(token);
+            String userTokensKey = USER_TOKENS_PREFIX + userId + ":refresh";
+            
+            boolean tokenExists = redisService.setIsMember(userTokensKey, token);
+            if (!tokenExists) {
+                log.debug("Refresh token not found in user's active token set for user: {}", userId);
+            }
+            return tokenExists;
+        } catch (Exception e) {
+            log.warn("Error validating refresh token: {}", e.getMessage());
+            return false;
+        }
     }
 
     public void blacklistToken(String token, Duration ttl) {
@@ -115,5 +155,41 @@ public class TokenRedisService {
         redisService.expire(refreshTokensKey, newTtl);
         
         log.debug("Extended TTL for user tokens: {}", userId);
+    }
+
+    public boolean isAccessTokenValidForUser(UUID userId, String token) {
+        // Check if token is blacklisted
+        if (isTokenBlacklisted(token)) {
+            log.debug("Access token is blacklisted for user: {}", userId);
+            return false;
+        }
+        
+        // Check if token exists in user's active token set
+        String userTokensKey = USER_TOKENS_PREFIX + userId + ":access";
+        boolean tokenExists = redisService.setIsMember(userTokensKey, token);
+        
+        if (!tokenExists) {
+            log.debug("Access token not found in active token set for user: {}", userId);
+        }
+        
+        return tokenExists;
+    }
+
+    public boolean isRefreshTokenValidForUser(UUID userId, String token) {
+        // Check if token is blacklisted
+        if (isTokenBlacklisted(token)) {
+            log.debug("Refresh token is blacklisted for user: {}", userId);
+            return false;
+        }
+        
+        // Check if token exists in user's active token set
+        String userTokensKey = USER_TOKENS_PREFIX + userId + ":refresh";
+        boolean tokenExists = redisService.setIsMember(userTokensKey, token);
+        
+        if (!tokenExists) {
+            log.debug("Refresh token not found in active token set for user: {}", userId);
+        }
+        
+        return tokenExists;
     }
 }
