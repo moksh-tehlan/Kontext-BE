@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,21 +62,22 @@ public class RagChatService {
         try {
             String[] knowledgeIds = knowledgeService.getProjectKnowledge(projectId).stream()
                     .map(project -> project.getId().toString()).toArray(String[]::new);
+            List<Document> documents = new ArrayList<>();
+            if (knowledgeIds.length != 0) {
+                Filter.Expression knowledgeFilter = new FilterExpressionBuilder()
+                        .in("knowledge_id", knowledgeIds)
+                        .build();
 
-            Filter.Expression knowledgeFilter = new FilterExpressionBuilder()
-                    .in("knowledge_id", knowledgeIds)
-                    .build();
+                DocumentRetriever retriever = VectorStoreDocumentRetriever.builder()
+                        .vectorStore(vectorStore)
+                        .similarityThreshold(0.6)
+                        .topK(5)
+                        .filterExpression(knowledgeFilter)
+                        .build();
 
-            DocumentRetriever retriever = VectorStoreDocumentRetriever.builder()
-                    .vectorStore(vectorStore)
-                    .similarityThreshold(0.6)
-                    .topK(5)
-                    .filterExpression(knowledgeFilter)
-                    .build();
-
-            List<Document> documents = retriever.retrieve(new Query(message));
-
-            ChatMessageService chatMessageService = new ChatMessageService(chatMessageRepository,chatService);
+                documents = retriever.retrieve(new Query(message));
+            }
+            ChatMessageService chatMessageService = new ChatMessageService(chatMessageRepository, chatService);
 
             ChatClient ragChatClient = ChatClient.builder(chatModel)
                     .defaultAdvisors(KontextChatAdvisor.builder(documents).build())
