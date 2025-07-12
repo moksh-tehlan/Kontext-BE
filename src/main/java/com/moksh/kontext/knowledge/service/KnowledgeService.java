@@ -2,10 +2,12 @@ package com.moksh.kontext.knowledge.service;
 
 import com.moksh.kontext.ai.service.VectorService;
 import com.moksh.kontext.aws.service.S3Service;
+import com.moksh.kontext.common.exception.BusinessException;
 import com.moksh.kontext.knowledge_processing.constants.EventType;
 import com.moksh.kontext.knowledge_processing.dto.event.ContentProcessRequestEvent;
 import com.moksh.kontext.knowledge_processing.service.SqsMessageService;
 import com.moksh.kontext.common.exception.ResourceNotFoundException;
+import com.moksh.kontext.common.response.ApiResponse;
 import com.moksh.kontext.common.util.SecurityContextUtil;
 import com.moksh.kontext.knowledge.dto.CreateKnowledgeDto;
 import com.moksh.kontext.knowledge.dto.KnowledgeDto;
@@ -21,8 +23,10 @@ import org.springframework.ai.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
@@ -30,6 +34,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -188,8 +193,12 @@ public class KnowledgeService {
     @Transactional(readOnly = true)
     public KnowledgeDto getKnowledgeById(UUID projectId, UUID knowledgeId) {
         UUID currentUserId = SecurityContextUtil.getCurrentUserId();
-        
-        projectRepository.findByIdAndUserIdAndIsActiveTrue(projectId, currentUserId)
+        return getKnowledgeById(projectId, knowledgeId, currentUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public KnowledgeDto getKnowledgeById(UUID projectId, UUID knowledgeId, UUID userId) {
+        projectRepository.findByIdAndUserIdAndIsActiveTrue(projectId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         Knowledge knowledge = knowledgeRepository.findByIdAndProjectIdAndIsActiveTrue(knowledgeId, projectId)
@@ -413,6 +422,80 @@ public class KnowledgeService {
         knowledgeRepository.save(knowledge);
         
         log.error("Knowledge processing failed for ID: {} with error: {}", knowledgeId, errorDetails);
+    }
+
+    public void pollForStatusChange(UUID projectId, UUID knowledgeId, UUID userId, DeferredResult<ApiResponse<KnowledgeDto>> deferredResult) {
+        log.debug("Starting polling for knowledge: {} in project: {} for user: {}", knowledgeId, projectId, userId);
+        
+        // Verify access to project
+        projectRepository.findByIdAndUserIdAndIsActiveTrue(projectId, userId)
+                .orElseThrow(() -> {
+                    log.warn("Project not found for projectId: {} and userId: {}", projectId, userId);
+                    return new ResourceNotFoundException("Project not found");
+                });
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                Knowledge.ProcessingStatus initialStatus = getCurrentProcessingStatus(knowledgeId, projectId);
+                
+                // If already processed, return immediately
+                if (initialStatus != Knowledge.ProcessingStatus.PROCESSING) {
+                    KnowledgeDto knowledge = getKnowledgeById(projectId, knowledgeId, userId);
+                    deferredResult.setResult(ApiResponse.success(knowledge, "Knowledge processing status retrieved"));
+                    return;
+                }
+
+                // Poll for status change with 500ms intervals for up to the timeout duration
+                long pollIntervalMs = 500;
+                long maxPolls = 40; // 40 * 500ms = 20 seconds
+                
+                for (int i = 0; i < maxPolls; i++) {
+                    try {
+                        Thread.sleep(pollIntervalMs);
+                        
+                        Knowledge.ProcessingStatus currentStatus = getCurrentProcessingStatus(knowledgeId, projectId);
+                        
+                        // If status changed from PROCESSING, return the result
+                        if (currentStatus != Knowledge.ProcessingStatus.PROCESSING) {
+                            KnowledgeDto knowledge = getKnowledgeById(projectId, knowledgeId, userId);
+                            String message = currentStatus == Knowledge.ProcessingStatus.SUCCESS 
+                                ? "Knowledge processing completed successfully" 
+                                : "Knowledge processing failed";
+                            deferredResult.setResult(ApiResponse.success(knowledge, message));
+                            return;
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        log.warn("Polling interrupted for knowledge: {}", knowledgeId);
+                        deferredResult.setErrorResult(new BusinessException(
+                            "Knowledge processing status polling was interrupted", 
+                            "POLLING_INTERRUPTED", 
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            5001
+                        ));
+                        return;
+                    }
+                }
+                
+                // If we reach here, polling timed out - timeout handler will handle this
+                log.debug("Polling completed without status change for knowledge: {}", knowledgeId);
+                
+            } catch (Exception e) {
+                log.error("Error during status polling for knowledge: {}", knowledgeId, e);
+                deferredResult.setErrorResult(new BusinessException(
+                    "An error occurred while checking knowledge processing status", 
+                    "PROCESSING_STATUS_CHECK_FAILED", 
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    5002
+                ));
+            }
+        });
+    }
+
+    private Knowledge.ProcessingStatus getCurrentProcessingStatus(UUID knowledgeId, UUID projectId) {
+        Knowledge knowledge = knowledgeRepository.findByIdAndProjectIdAndIsActiveTrue(knowledgeId, projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Knowledge not found"));
+        return knowledge.getProcessingStatus();
     }
 
 }
