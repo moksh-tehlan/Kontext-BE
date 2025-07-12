@@ -22,7 +22,8 @@ public class KontextChatAdvisor implements BaseAdvisor {
     private static final PromptTemplate DEFAULT_PROMPT_TEMPLATE = new PromptTemplate("""
             {agent_instruction}
             
-            {query}
+            User: {user_display_name}
+            Query: {query}
             
             Context information is below, surrounded by ---------------------
             
@@ -32,17 +33,19 @@ public class KontextChatAdvisor implements BaseAdvisor {
             
             Given the context and provided history information and not prior knowledge,
             reply to the user comment. If the answer is not in the context, inform
-            the user that you can't answer the question.
+            the user that you can't answer the question. Address the user by their name when appropriate.
             """);
 
     private final List<Document> documents;
     private final String agentInstruction;
+    private final String userDisplayName;
     private final PromptTemplate promptTemplate;
     private final Scheduler scheduler;
 
-    public KontextChatAdvisor(List<Document> documents, String agentInstruction) {
+    public KontextChatAdvisor(List<Document> documents, String agentInstruction, String userDisplayName) {
         this.documents = documents;
         this.agentInstruction = agentInstruction;
+        this.userDisplayName = userDisplayName;
         this.promptTemplate = DEFAULT_PROMPT_TEMPLATE;
         this.scheduler = BaseAdvisor.DEFAULT_SCHEDULER;
     }
@@ -54,6 +57,7 @@ public class KontextChatAdvisor implements BaseAdvisor {
     public static final class Builder {
         List<Document> documents;
         String agentInstruction;
+        String userDisplayName;
 
         private Builder(List<Document> documents) {
             Assert.notNull(documents, "The documents must not be null!");
@@ -65,10 +69,16 @@ public class KontextChatAdvisor implements BaseAdvisor {
             return this;
         }
 
+        public Builder withUserDisplayName(String userDisplayName) {
+            this.userDisplayName = userDisplayName;
+            return this;
+        }
+
         public KontextChatAdvisor build() {
             return new KontextChatAdvisor(
                     this.documents,
-                    this.agentInstruction
+                    this.agentInstruction,
+                    this.userDisplayName
             );
         }
     }
@@ -89,9 +99,13 @@ public class KontextChatAdvisor implements BaseAdvisor {
         String agentInstructionText = agentInstruction != null && !agentInstruction.trim().isEmpty() 
                 ? agentInstruction 
                 : "";
+        String userDisplayNameText = userDisplayName != null && !userDisplayName.trim().isEmpty()
+                ? userDisplayName
+                : "User";
         String augmentedUserText = this.promptTemplate
                 .render(Map.of(
                         "agent_instruction", agentInstructionText,
+                        "user_display_name", userDisplayNameText,
                         "query", userMessage.getText(), 
                         "question_answer_context", documentContext
                 ));

@@ -12,6 +12,8 @@ import com.moksh.kontext.chat.service.ChatService;
 import com.moksh.kontext.chat.service.ChatMessageService;
 import com.moksh.kontext.common.response.ApiResponse;
 import com.moksh.kontext.common.response.PageResponse;
+import com.moksh.kontext.common.util.SecurityContextUtil;
+import com.moksh.kontext.user.entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -126,8 +128,12 @@ public class ChatController {
     @PostMapping("{id}/chat")
     public ApiResponse<String> chatWithAI(@Valid @RequestBody ChatRequest chatRequest, @PathVariable UUID id) {
         UUID projectId = chatService.getChatById(id).getProjectId();
+        
+        // Get current user and their display name
+        User currentUser = SecurityContextUtil.getCurrentUserOrThrow();
+        String userDisplayName = currentUser.getDisplayName();
 
-        String aiResponse = ragChatService.chatWithContext(chatRequest.getQuery(), projectId,id);
+        String aiResponse = ragChatService.chatWithContext(chatRequest.getQuery(), projectId, id, userDisplayName);
 
         return ApiResponse.success(aiResponse, "AI chat response generated successfully");
     }

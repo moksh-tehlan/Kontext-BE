@@ -59,7 +59,7 @@ public class RagChatService {
         this.projectService = projectService;
     }
 
-    public String chatWithContext(String message, UUID projectId, UUID chatId) {
+    public String chatWithContext(String message, UUID projectId, UUID chatId, String userDisplayName) {
         log.info("Processing RAG chat request for project: {}", projectId);
 
         try {
@@ -88,6 +88,7 @@ public class RagChatService {
             ChatClient ragChatClient = ChatClient.builder(chatModel)
                     .defaultAdvisors(KontextChatAdvisor.builder(documents)
                             .withAgentInstruction(agentInstruction)
+                            .withUserDisplayName(userDisplayName)
                             .build())
                     .defaultAdvisors(UnifiedChatMemoryAdvisor.builder()
                             .chatVectorStore(chatVectorStore)
