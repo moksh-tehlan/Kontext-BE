@@ -20,6 +20,8 @@ public class KontextChatAdvisor implements BaseAdvisor {
 
     public static final String RETRIEVED_DOCUMENTS = "kontext_retrieved_documents";
     private static final PromptTemplate DEFAULT_PROMPT_TEMPLATE = new PromptTemplate("""
+            {agent_instruction}
+            
             {query}
             
             Context information is below, surrounded by ---------------------
@@ -34,11 +36,13 @@ public class KontextChatAdvisor implements BaseAdvisor {
             """);
 
     private final List<Document> documents;
+    private final String agentInstruction;
     private final PromptTemplate promptTemplate;
     private final Scheduler scheduler;
 
-    public KontextChatAdvisor(List<Document> documents) {
+    public KontextChatAdvisor(List<Document> documents, String agentInstruction) {
         this.documents = documents;
+        this.agentInstruction = agentInstruction;
         this.promptTemplate = DEFAULT_PROMPT_TEMPLATE;
         this.scheduler = BaseAdvisor.DEFAULT_SCHEDULER;
     }
@@ -49,15 +53,22 @@ public class KontextChatAdvisor implements BaseAdvisor {
 
     public static final class Builder {
         List<Document> documents;
+        String agentInstruction;
 
         private Builder(List<Document> documents) {
             Assert.notNull(documents, "The documents must not be null!");
             this.documents = documents;
         }
 
+        public Builder withAgentInstruction(String agentInstruction) {
+            this.agentInstruction = agentInstruction;
+            return this;
+        }
+
         public KontextChatAdvisor build() {
             return new KontextChatAdvisor(
-                    this.documents
+                    this.documents,
+                    this.agentInstruction
             );
         }
     }
@@ -75,8 +86,15 @@ public class KontextChatAdvisor implements BaseAdvisor {
                 : documents.stream().map(Document::getText).collect(Collectors.joining(System.lineSeparator()));
 
         UserMessage userMessage = chatClientRequest.prompt().getUserMessage();
+        String agentInstructionText = agentInstruction != null && !agentInstruction.trim().isEmpty() 
+                ? agentInstruction 
+                : "";
         String augmentedUserText = this.promptTemplate
-                .render(Map.of("query", userMessage.getText(), "question_answer_context", documentContext));
+                .render(Map.of(
+                        "agent_instruction", agentInstructionText,
+                        "query", userMessage.getText(), 
+                        "question_answer_context", documentContext
+                ));
 
         // 4. Update ChatClientRequest with augmented prompt.
         return chatClientRequest.mutate()

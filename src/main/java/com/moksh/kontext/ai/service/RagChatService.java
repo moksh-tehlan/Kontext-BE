@@ -38,6 +38,7 @@ public class RagChatService {
     private final KnowledgeService knowledgeService;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatService chatService;
+    private final ProjectService projectService;
 
     @Autowired
     public RagChatService(
@@ -46,7 +47,8 @@ public class RagChatService {
             ChatModel chatModel,
             KnowledgeService knowledgeService,
             ChatMessageRepository chatMessageRepository,
-            ChatService chatService
+            ChatService chatService,
+            ProjectService projectService
     ) {
         this.vectorStore = vectorStore;
         this.chatVectorStore = chatVectorStore;
@@ -54,12 +56,16 @@ public class RagChatService {
         this.knowledgeService = knowledgeService;
         this.chatMessageRepository = chatMessageRepository;
         this.chatService = chatService;
+        this.projectService = projectService;
     }
 
     public String chatWithContext(String message, UUID projectId, UUID chatId) {
         log.info("Processing RAG chat request for project: {}", projectId);
 
         try {
+            // Retrieve project to get agent instruction
+            String agentInstruction = projectService.getProjectById(projectId).getAgentInstruction();
+            
             String[] knowledgeIds = knowledgeService.getProjectKnowledge(projectId).stream()
                     .map(project -> project.getId().toString()).toArray(String[]::new);
             List<Document> documents = new ArrayList<>();
@@ -80,7 +86,9 @@ public class RagChatService {
             ChatMessageService chatMessageService = new ChatMessageService(chatMessageRepository, chatService);
 
             ChatClient ragChatClient = ChatClient.builder(chatModel)
-                    .defaultAdvisors(KontextChatAdvisor.builder(documents).build())
+                    .defaultAdvisors(KontextChatAdvisor.builder(documents)
+                            .withAgentInstruction(agentInstruction)
+                            .build())
                     .defaultAdvisors(UnifiedChatMemoryAdvisor.builder()
                             .chatVectorStore(chatVectorStore)
                             .chatMessageService(chatMessageService)
