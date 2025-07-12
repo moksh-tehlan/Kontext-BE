@@ -69,6 +69,23 @@ spring:
           max-idle: 8
           min-idle: 0
           max-wait: -1ms
+  
+  # Mail Configuration (Common)
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: ${BREVO_SMTP_USERNAME:914b59001@smtp-brevo.com}
+    password: ${BREVO_SMTP_PASSWORD:aJOtj5ISqPAhEn79}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
         
   # AI Configuration (Common)
   ai:

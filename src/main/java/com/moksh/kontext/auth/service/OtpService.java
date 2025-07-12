@@ -3,6 +3,8 @@ package com.moksh.kontext.auth.service;
 import com.moksh.kontext.auth.exception.OtpDoesntMatchException;
 import com.moksh.kontext.auth.exception.OtpExpiredException;
 import com.moksh.kontext.auth.exception.OtpNotFoundException;
+import com.moksh.kontext.auth.exception.OtpRateLimitExceededException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class OtpService {
 
@@ -18,21 +21,35 @@ public class OtpService {
     private static final int OTP_EXPIRY_MINUTES = 10;
     private static final SecureRandom random = new SecureRandom();
     
+    private final EmailService emailService;
+    private final OtpRateLimitService rateLimitService;
+    
     // In production, use Redis or database for OTP storage
     private final ConcurrentHashMap<String, OtpData> otpStore = new ConcurrentHashMap<>();
 
     public void generateAndSendOtp(String email) {
+        // Check rate limiting before generating OTP
+        if (rateLimitService.isRateLimited(email)) {
+            throw OtpRateLimitExceededException.forEmail(email);
+        }
+        
+        // Record the attempt
+        rateLimitService.recordAttempt(email);
+        
         String otp = generateOtp();
         LocalDateTime expiryTime = LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES);
         
         otpStore.put(email, new OtpData(otp, expiryTime));
         
-        // In production, send OTP via email service
-        // For development, we'll just log it
-        log.info("OTP for {}: {} (expires at: {})", email, otp, expiryTime);
-        
-        // Simulate email sending
-        sendOtpEmail(email, otp);
+        try {
+            emailService.sendOtpEmail(email, otp);
+            log.info("OTP generated and sent successfully to: {} (expires at: {})", email, expiryTime);
+        } catch (Exception e) {
+            log.error("Failed to send OTP email to: {}", email, e);
+            // Remove OTP from store if email sending fails
+            otpStore.remove(email);
+            throw e;
+        }
     }
 
     public void verifyOtp(String email, String providedOtp) {
@@ -60,20 +77,11 @@ public class OtpService {
     }
 
     private String generateOtp() {
-//        StringBuilder otp = new StringBuilder();
-//        for (int i = 0; i < OTP_LENGTH; i++) {
-//            otp.append(random.nextInt(10));
-//        }
-        return "999999";
-    }
-
-    private void sendOtpEmail(String email, String otp) {
-        // In production, integrate with email service (SendGrid, AWS SES, etc.)
-        log.info("Sending OTP email to: {} with OTP: {}", email, otp);
-        
-        // TODO: Implement actual email sending
-        // Example:
-        // emailService.sendOtpEmail(email, otp);
+        StringBuilder otp = new StringBuilder();
+        for (int i = 0; i < OTP_LENGTH; i++) {
+            otp.append(random.nextInt(10));
+        }
+        return otp.toString();
     }
 
     public void clearExpiredOtps() {

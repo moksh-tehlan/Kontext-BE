@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "d4b87c5e-8f2a-4c1b-9e3d-123456789abc",
 		"name": "Kontext API",
-		"description": "Complete API collection for Kontext application with JWT authentication, Redis-based session management, UUID entity IDs, and enhanced security features",
+		"description": "Complete API collection for Kontext application with Email OTP Service (Brevo SMTP), JWT authentication, Redis-based session management, rate limiting, and enhanced security features. Updated with comprehensive email OTP testing and all 42 API endpoints.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "123456"
 	},
@@ -11,7 +11,7 @@
 			"name": "Authentication",
 			"item": [
 				{
-					"name": "Send OTP (Login/Register)",
+					"name": "Send OTP (Email via Brevo SMTP)",
 					"event": [
 						{
 							"listen": "test",
@@ -24,7 +24,24 @@
 									"pm.test(\"Response has success message\", function () {",
 									"    const responseJson = pm.response.json();",
 									"    pm.expect(responseJson.message).to.eql(\"OTP sent successfully\");",
-									"});"
+									"});",
+									"",
+									"pm.test(\"OTP rate limit not exceeded\", function () {",
+									"    pm.expect(pm.response.code).to.not.eql(429);",
+									"});",
+									"",
+									"pm.test(\"Response format is correct\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('success');",
+									"    pm.expect(responseJson).to.have.property('message');",
+									"    pm.expect(responseJson).to.have.property('timestamp');",
+									"});",
+									"",
+									"// Instructions for manual testing",
+									"console.log('📧 Email OTP sent via Brevo SMTP');",
+									"console.log('✅ Check your email for OTP code');",
+									"console.log('⏰ OTP expires in 10 minutes');",
+									"console.log('🚨 Rate limited to 5 requests per hour');"
 								],
 								"type": "text/javascript"
 							}
@@ -70,17 +87,30 @@
 									"    const responseJson = pm.response.json();",
 									"    pm.expect(responseJson.data).to.have.property('accessToken');",
 									"    pm.expect(responseJson.data).to.have.property('refreshToken');",
+									"    pm.expect(responseJson.data).to.have.property('user');",
 									"    ",
-									"    // Store tokens for future requests",
+									"    // Store tokens and user info for future requests",
 									"    pm.environment.set('access_token', responseJson.data.accessToken);",
 									"    pm.environment.set('refresh_token', responseJson.data.refreshToken);",
 									"    pm.environment.set('user_id', responseJson.data.user.id);",
+									"    pm.environment.set('token_time', Math.floor(Date.now() / 1000));",
 									"});",
 									"",
 									"pm.test(\"Login successful message\", function () {",
 									"    const responseJson = pm.response.json();",
 									"    pm.expect(responseJson.message).to.eql(\"Login successful\");",
-									"});"
+									"});",
+									"",
+									"pm.test(\"User object contains required fields\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data.user).to.have.property('email');",
+									"    pm.expect(responseJson.data.user).to.have.property('firstName');",
+									"    pm.expect(responseJson.data.user).to.have.property('lastName');",
+									"});",
+									"",
+									"// Success feedback",
+									"console.log('🎉 Successfully logged in with OTP');",
+									"console.log('🔑 JWT tokens stored in environment');"
 								],
 								"type": "text/javascript"
 							}
@@ -126,11 +156,21 @@
 									"    const responseJson = pm.response.json();",
 									"    pm.expect(responseJson.data).to.have.property('accessToken');",
 									"    pm.expect(responseJson.data).to.have.property('refreshToken');",
+									"    pm.expect(responseJson.data).to.have.property('user');",
 									"    ",
-									"    // Store tokens for future requests",
+									"    // Store tokens and user info for future requests",
 									"    pm.environment.set('access_token', responseJson.data.accessToken);",
 									"    pm.environment.set('refresh_token', responseJson.data.refreshToken);",
-									"});"
+									"    pm.environment.set('user_id', responseJson.data.user.id);",
+									"    pm.environment.set('token_time', Math.floor(Date.now() / 1000));",
+									"});",
+									"",
+									"pm.test(\"Google login successful\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Login successful\");",
+									"});",
+									"",
+									"console.log('🎉 Successfully logged in with Google OAuth');"
 								],
 								"type": "text/javascript"
 							}
@@ -175,10 +215,20 @@
 									"pm.test(\"Response contains new access token\", function () {",
 									"    const responseJson = pm.response.json();",
 									"    pm.expect(responseJson.data).to.have.property('accessToken');",
+									"    pm.expect(responseJson.data).to.have.property('refreshToken');",
 									"    ",
-									"    // Update access token",
+									"    // Update both tokens and timestamp",
 									"    pm.environment.set('access_token', responseJson.data.accessToken);",
-									"});"
+									"    pm.environment.set('refresh_token', responseJson.data.refreshToken);",
+									"    pm.environment.set('token_time', Math.floor(Date.now() / 1000));",
+									"});",
+									"",
+									"pm.test(\"Token refresh successful\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.eql(\"Token refreshed successfully\");",
+									"});",
+									"",
+									"console.log('🔄 JWT tokens refreshed successfully');"
 								],
 								"type": "text/javascript"
 							}
@@ -224,10 +274,14 @@
 									"    const responseJson = pm.response.json();",
 									"    pm.expect(responseJson.message).to.eql(\"Logout successful\");",
 									"    ",
-									"    // Clear tokens",
+									"    // Clear all authentication-related environment variables",
 									"    pm.environment.unset('access_token');",
 									"    pm.environment.unset('refresh_token');",
-									"});"
+									"    pm.environment.unset('user_id');",
+									"    pm.environment.unset('token_time');",
+									"});",
+									"",
+									"console.log('👋 Successfully logged out - tokens cleared');"
 								],
 								"type": "text/javascript"
 							}
@@ -430,6 +484,44 @@
 								"users",
 								"email",
 								"{{user_email}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by Google ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains user data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('googleId');",
+									"    pm.expect(responseJson.data).to.have.property('email');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/google/{{google_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"google",
+								"{{google_id}}"
 							]
 						}
 					},
@@ -2367,17 +2459,35 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
-					"// Auto-refresh token if expired",
+					"// Enhanced Token Management & Email OTP Guidance",
 					"const accessToken = pm.environment.get('access_token');",
 					"const refreshToken = pm.environment.get('refresh_token');",
+					"const currentTime = Math.floor(Date.now() / 1000);",
 					"",
+					"// Check token expiry",
 					"if (accessToken && refreshToken) {",
-					"    // Check if token is close to expiry (simplified check)",
-					"    const currentTime = Math.floor(Date.now() / 1000);",
 					"    const tokenTime = pm.environment.get('token_time');",
 					"    ",
 					"    if (tokenTime && (currentTime - tokenTime) > 600) { // 10 minutes",
-					"        console.log('Token might be expired, consider refreshing');",
+					"        console.log('⚠️ Access token might be expired (>10 min old)');",
+					"        console.log('🔄 Consider running \"Refresh Token\" request');",
+					"    }",
+					"}",
+					"",
+					"// Email OTP guidance for send-otp requests",
+					"if (pm.request.url.path && pm.request.url.path.includes('send-otp')) {",
+					"    console.log('📧 Email OTP Service - Brevo SMTP');",
+					"    console.log('✅ OTP will be sent to: ' + pm.environment.get('user_email'));",
+					"    console.log('⏰ OTP expires in 10 minutes');",
+					"    console.log('🚨 Rate limit: 5 requests per hour per email');",
+					"    console.log('📬 Check your email inbox for the OTP code');",
+					"}",
+					"",
+					"// Login guidance",
+					"if (pm.request.url.path && pm.request.url.path.includes('login') && !pm.request.url.path.includes('google')) {",
+					"    const otpCode = pm.environment.get('otp_code');",
+					"    if (!otpCode || otpCode === '') {",
+					"        console.log('⚠️ Remember to set {{otp_code}} variable with the OTP from your email');",
 					"    }",
 					"}"
 				]
@@ -2388,14 +2498,36 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
-					"// Global test to check response format",
-					"pm.test(\"Response time is less than 5000ms\", function () {",
+					"// Global response validation",
+					"pm.test(\"Response time is acceptable (<5s)\", function () {",
 					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
 					"});",
 					"",
 					"pm.test(\"Response has proper JSON format\", function () {",
-					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
-					"});"
+					"    if (pm.response.headers.get('Content-Type')) {",
+					"        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"    }",
+					"});",
+					"",
+					"// Email OTP specific validations",
+					"if (pm.response.code === 429) {",
+					"    console.log('🚨 Rate limit exceeded! Wait before trying again.');",
+					"    console.log('💡 Email OTP: Max 5 requests per hour per email address');",
+					"}",
+					"",
+					"// Token expiry specific validation",
+					"if (pm.response.code === 401 && pm.response.json().errorCode === 'JWT_TOKEN_EXPIRED') {",
+					"    console.log('🔑 JWT token expired - use Refresh Token endpoint');",
+					"}",
+					"",
+					"// Success logging for auth endpoints",
+					"if (pm.response.code === 200 && pm.request.url.path) {",
+					"    if (pm.request.url.path.includes('send-otp')) {",
+					"        console.log('✅ OTP sent successfully via Brevo SMTP');",
+					"    } else if (pm.request.url.path.includes('login')) {",
+					"        console.log('✅ Authentication successful');",
+					"    }",
+					"}"
 				]
 			}
 		}

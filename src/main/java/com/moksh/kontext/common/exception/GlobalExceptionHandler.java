@@ -93,6 +93,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getHttpStatus()).body(response);
     }
 
+    @ExceptionHandler(OtpRateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleOtpRateLimitExceededException(
+            OtpRateLimitExceededException ex, HttpServletRequest request) {
+        log.warn("OTP rate limit exceeded: {}", ex.getMessage());
+        
+        ApiResponse<Object> response = ApiResponse.error(
+                ex.getMessage(),
+                "OTP_RATE_LIMIT_EXCEEDED",
+                request.getRequestURI(),
+                HttpStatus.TOO_MANY_REQUESTS.value()
+        );
+        
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
+    }
+
     @ExceptionHandler(UserAccountDeactivatedException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserAccountDeactivatedException(
             UserAccountDeactivatedException ex, HttpServletRequest request) {
